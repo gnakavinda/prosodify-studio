@@ -15,6 +15,12 @@ interface Voice {
   roles: string[];
 }
 
+interface GroupedVoices {
+  locale: string;
+  localeName: string;
+  voices: Voice[];
+}
+
 interface VoiceSettingsProps {
   selectedVoice: string;
   setSelectedVoice: (voice: string) => void;
@@ -30,7 +36,7 @@ export default function VoiceSettings({
 }: VoiceSettingsProps) {
   // Dynamic voices state
   const [voices, setVoices] = useState<Voice[]>([])
-  const [groupedVoices, setGroupedVoices] = useState<Record<string, any>>({})
+  const [groupedVoices, setGroupedVoices] = useState<Record<string, GroupedVoices>>({})
   const [isLoadingVoices, setIsLoadingVoices] = useState(true)
   const [voicesError, setVoicesError] = useState<string | null>(null)
 
@@ -90,12 +96,20 @@ export default function VoiceSettings({
 
   // Update style when voice changes
   useEffect(() => {
-    const availableStyles = getAvailableStyles()
+    const getStyles = () => {
+      const voice = voices.find(v => v.shortName === selectedVoice)
+      const styles = voice?.styles || []
+      if (styles.length === 0) {
+        return ['default']
+      }
+      return styles
+    }
+
+    const availableStyles = getStyles()
     if (availableStyles.length > 0 && !availableStyles.includes(voiceStyle)) {
-      // Set to 'default' if voice has no styles, otherwise use first available style
       setVoiceStyle(availableStyles[0])
     }
-  }, [selectedVoice, voiceStyle, setVoiceStyle])
+  }, [selectedVoice, voiceStyle, setVoiceStyle, voices])
 
   // Filter voices based on search term, language, and gender
   const getFilteredVoices = () => {

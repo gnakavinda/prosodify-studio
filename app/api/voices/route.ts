@@ -1,6 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+interface AzureVoice {
+  ShortName: string;
+  DisplayName: string;
+  Locale: string;
+  LocaleName: string;
+  Gender: string;
+  VoiceType: string;
+  StyleList?: string[];
+  RolePlayList?: string[];
+  SampleRateHertz: number;
+  Status: string;
+  WordsPerMinute?: number;
+}
+
+interface OrganizedVoice {
+  id: string;
+  name: string;
+  shortName: string;
+  locale: string;
+  localeName: string;
+  gender: string;
+  voiceType: string;
+  styles: string[];
+  roles: string[];
+  sampleRateHertz: number;
+  status: string;
+  wordsPerMinute: number;
+}
+
+interface GroupedVoices {
+  locale: string;
+  localeName: string;
+  voices: OrganizedVoice[];
+}
+
+export async function GET() {
   try {
     console.log('Fetching voices from Azure...');
     console.log('AZURE_SPEECH_KEY exists:', !!process.env.AZURE_SPEECH_KEY);
@@ -31,16 +66,16 @@ export async function GET(request: NextRequest) {
       }, { status: response.status });
     }
 
-    const voices = await response.json();
+    const voices: AzureVoice[] = await response.json();
     console.log(`Retrieved ${voices.length} voices from Azure`);
 
     // Filter and organize the voices
-    const organizedVoices = voices
-      .filter((voice: any) => {
+    const organizedVoices: OrganizedVoice[] = voices
+      .filter((voice: AzureVoice) => {
         // Filter for English voices and Neural voices only
         return voice.Locale.startsWith('en-') && voice.VoiceType === 'Neural';
       })
-      .map((voice: any) => ({
+      .map((voice: AzureVoice) => ({
         id: voice.ShortName,
         name: voice.DisplayName,
         shortName: voice.ShortName,
@@ -54,7 +89,7 @@ export async function GET(request: NextRequest) {
         status: voice.Status,
         wordsPerMinute: voice.WordsPerMinute || 0
       }))
-      .sort((a: any, b: any) => {
+      .sort((a: OrganizedVoice, b: OrganizedVoice) => {
         // Sort by locale first, then by name
         if (a.locale !== b.locale) {
           return a.locale.localeCompare(b.locale);
@@ -65,7 +100,7 @@ export async function GET(request: NextRequest) {
     console.log(`Filtered to ${organizedVoices.length} English Neural voices`);
 
     // Group by language/locale for easier frontend handling
-    const groupedByLocale = organizedVoices.reduce((acc: any, voice: any) => {
+    const groupedByLocale: Record<string, GroupedVoices> = organizedVoices.reduce((acc: Record<string, GroupedVoices>, voice: OrganizedVoice) => {
       if (!acc[voice.locale]) {
         acc[voice.locale] = {
           locale: voice.locale,
@@ -78,14 +113,14 @@ export async function GET(request: NextRequest) {
     }, {});
 
     // Log some statistics
-    const localeStats = Object.entries(groupedByLocale).map(([locale, data]: [string, any]) => 
+    const localeStats = Object.entries(groupedByLocale).map(([locale, data]: [string, GroupedVoices]) => 
       `${locale}: ${data.voices.length} voices`
     );
     console.log('Voices by locale:', localeStats);
 
     // Count total styles available
     const totalStyles = new Set(
-      organizedVoices.flatMap((voice: any) => voice.styles)
+      organizedVoices.flatMap((voice: OrganizedVoice) => voice.styles)
     ).size;
 
     return NextResponse.json({
@@ -108,7 +143,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Optional: Add caching headers
-export async function HEAD(request: NextRequest) {
+export async function HEAD() {
   return new NextResponse(null, {
     status: 200,
     headers: {
