@@ -8,8 +8,6 @@
 
 A modern, professional-grade text-to-speech application that leverages Azure Cognitive Services to generate high-quality audio from text. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
-![Prosodify Studio Screenshot](https://via.placeholder.com/800x400/1e40af/ffffff?text=Prosodify+Studio+Interface)
-
 ## ✨ Features
 
 ### 🎯 Core Functionality
