@@ -46,7 +46,7 @@ A modern, professional-grade text-to-speech application that leverages Azure Cog
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/prosodify-studio.git
+   git clone https://github.com/gnakavinda/prosodify-studio.git
    cd prosodify-studio
    ```
 
