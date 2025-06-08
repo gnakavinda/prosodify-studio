@@ -24,3 +24,52 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Force text visibility - override any dark mode issues */
+* {
+  color: #1f2937 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #111827 !important;
+}
+
+label {
+  color: #374151 !important;
+}
+
+.text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+.text-blue-900 {
+  color: #1e3a8a !important;
+}
+
+.text-yellow-700 {
+  color: #a16207 !important;
+}
+
+.text-yellow-800 {
+  color: #92400e !important;
+}
+
+.text-green-600 {
+  color: #059669 !important;
+}
+
+.text-green-800 {
+  color: #065f46 !important;
+}
+
+button {
+  color: inherit !important;
+}
+
+input, select, textarea {
+  color: #111827 !important;
+}
