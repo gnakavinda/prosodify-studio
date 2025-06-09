@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, Loader, Search, Filter, X } from 'lucide-react'
+import { Loader, Search, Filter, X } from 'lucide-react'
 
 interface Voice {
   id: string;
@@ -199,162 +199,157 @@ export default function VoiceSettings({
     return styleIcons[style.toLowerCase()] || '🎭'
   }
 
+  // Show loading indicator
+  if (isLoadingVoices) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400 mr-2" />
+        <span className="text-gray-600 dark:text-gray-400">Loading voices...</span>
+      </div>
+    )
+  }
+
+  // Show error message
+  if (voicesError) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-red-800 dark:text-red-200 text-sm">Error loading voices: {voicesError}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-300">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-        <Settings className="w-5 h-5 mr-2" />
-        Voice Settings
-        {isLoadingVoices && <Loader className="w-4 h-4 ml-2 animate-spin" />}
-      </h3>
+    <div className="space-y-4">
       
-      {voicesError ? (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
-          <p className="text-red-800 dark:text-red-200 text-sm">Error loading voices: {voicesError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
-          >
-            Retry
-          </button>
+      {/* Voice Filters */}
+      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3 transition-colors duration-300">
+        <div className="flex items-center mb-2">
+          <Filter className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters</span>
         </div>
-      ) : (
-        <div className="space-y-4">
-          
-          {/* Voice Filters */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3 transition-colors duration-300">
-            <div className="flex items-center mb-2">
-              <Filter className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters</span>
-            </div>
-            
-            {/* Search Box */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search voices..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Language and Gender Filters */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Language</label>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                  style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-                >
-                  <option value="all">🌍 All Languages</option>
-                  {getAvailableLanguages().map((language) => {
-                    const group = groupedVoices[language]
-                    const flag = getCountryFlag(language)
-                    const code = getCountryCode(language)
-                    return (
-                      <option key={language} value={language}>
-                        {flag} {group?.localeName || language} ({code})
-                      </option>
-                    )
-                  })}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gender</label>
-                <select
-                  value={selectedGender}
-                  onChange={(e) => setSelectedGender(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                  style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-                >
-                  <option value="all">👥 All Genders</option>
-                  {getAvailableGenders().map((gender) => (
-                    <option key={gender} value={gender}>
-                      {getGenderIcon(gender)} {gender}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Filter Results Counter */}
-            <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
-              {isLoadingVoices ? (
-                'Loading voices...'
-              ) : (
-                `Showing ${getFilteredVoices().length} of ${voices.length} voices`
-              )}
-            </div>
-          </div>
-
-          {/* Voice Selection Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Voice
-            </label>
-            {isLoadingVoices ? (
-              <div className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                Loading voices...
-              </div>
-            ) : (
-              <select
-                value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.target.value)}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-              >
-                <option value="">Select a voice...</option>
-                {getFilteredVoices().map((voice) => (
-                  <option key={voice.shortName} value={voice.shortName}>
-                    {getCountryFlag(voice.locale)} {getGenderIcon(voice.gender)} {voice.name} - {voice.localeName}
-                  </option>
-                ))}
-              </select>
-            )}
-            
-            {/* No results message */}
-            {!isLoadingVoices && getFilteredVoices().length === 0 && (
-              <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-                  No voices found matching your filters. Try adjusting your search criteria.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Style Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Style ({getAvailableStyles().length} available)
-            </label>
-            <select
-              value={voiceStyle}
-              onChange={(e) => setVoiceStyle(e.target.value)}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-              disabled={!selectedVoice}
+        
+        {/* Search Box */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search voices..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
-              {getAvailableStyles().map((style) => (
-                <option key={style} value={style}>
-                  {getStyleIcon(style)} {style.charAt(0).toUpperCase() + style.slice(1)}
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Language and Gender Filters */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Language</label>
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            >
+              <option value="all">🌍 All Languages</option>
+              {getAvailableLanguages().map((language) => {
+                const group = groupedVoices[language]
+                const flag = getCountryFlag(language)
+                const code = getCountryCode(language)
+                return (
+                  <option key={language} value={language}>
+                    {flag} {group?.localeName || language} ({code})
+                  </option>
+                )
+              })}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gender</label>
+            <select
+              value={selectedGender}
+              onChange={(e) => setSelectedGender(e.target.value)}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            >
+              <option value="all">👥 All Genders</option>
+              {getAvailableGenders().map((gender) => (
+                <option key={gender} value={gender}>
+                  {getGenderIcon(gender)} {gender}
                 </option>
               ))}
             </select>
           </div>
         </div>
-      )}
+
+        {/* Filter Results Counter */}
+        <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
+          Showing {getFilteredVoices().length} of {voices.length} voices
+        </div>
+      </div>
+
+      {/* Voice Selection Dropdown */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Select Voice
+        </label>
+        <select
+          value={selectedVoice}
+          onChange={(e) => setSelectedVoice(e.target.value)}
+          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+        >
+          <option value="">Select a voice...</option>
+          {getFilteredVoices().map((voice) => (
+            <option key={voice.shortName} value={voice.shortName}>
+              {getCountryFlag(voice.locale)} {getGenderIcon(voice.gender)} {voice.name} - {voice.localeName}
+            </option>
+          ))}
+        </select>
+        
+        {/* No results message */}
+        {getFilteredVoices().length === 0 && (
+          <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+              No voices found matching your filters. Try adjusting your search criteria.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Style Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Style ({getAvailableStyles().length} available)
+        </label>
+        <select
+          value={voiceStyle}
+          onChange={(e) => setVoiceStyle(e.target.value)}
+          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+          disabled={!selectedVoice}
+        >
+          {getAvailableStyles().map((style) => (
+            <option key={style} value={style}>
+              {getStyleIcon(style)} {style.charAt(0).toUpperCase() + style.slice(1)}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   )
 }

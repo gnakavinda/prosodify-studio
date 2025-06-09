@@ -27,51 +27,88 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Force text visibility - override any dark mode issues */
-* {
-  color: #1f2937 !important;
+/* Custom slider styling for better UX */
+.slider {
+  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 50%, #e5e7eb 50%, #e5e7eb 100%);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: #111827 !important;
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-label {
-  color: #374151 !important;
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.text-gray-500 {
-  color: #6b7280 !important;
+/* Dark mode slider adjustments */
+.dark .slider {
+  background: linear-gradient(to right, #60a5fa 0%, #60a5fa 50%, #374151 50%, #374151 100%);
 }
 
-.text-blue-700 {
-  color: #1d4ed8 !important;
+.dark .slider::-webkit-slider-thumb {
+  background: #60a5fa;
+  border-color: #1f2937;
 }
 
-.text-blue-900 {
-  color: #1e3a8a !important;
+.dark .slider::-moz-range-thumb {
+  background: #60a5fa;
+  border-color: #1f2937;
 }
 
-.text-yellow-700 {
-  color: #a16207 !important;
+/* Loading animation for voice selection */
+@keyframes pulse-blue {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.text-yellow-800 {
-  color: #92400e !important;
+.pulse-blue {
+  animation: pulse-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.text-green-600 {
-  color: #059669 !important;
+/* Custom scrollbar for audio file list */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.text-green-800 {
-  color: #065f46 !important;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
 }
 
-button {
-  color: inherit !important;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
-input, select, textarea {
-  color: #111827 !important;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #334155;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
