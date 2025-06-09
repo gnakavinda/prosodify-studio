@@ -194,44 +194,35 @@ export default function Home() {
               <h2 className="text-lg font-semibold text-gray-900">How Prosodify Works</h2>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-4">
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FileText className="w-4 h-4 text-blue-600" />
+                <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-1">1. Enter Your Text</h3>
-                  <p className="text-sm text-gray-600">Type or paste up to 5,000 characters. Preview first 200 characters or generate the full audio.</p>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">1. Enter Your Text</h3>
+                  <p className="text-xs text-gray-600">Type or paste up to 5,000 characters. Preview first 200 characters or generate the full audio.</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Mic className="w-4 h-4 text-purple-600" />
+                <div className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Mic className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-1">2. Customize Voice</h3>
-                  <p className="text-sm text-gray-600">Choose from premium neural voices, styles, and adjust speech rate, pitch, and volume.</p>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">2. Customize Voice</h3>
+                  <p className="text-xs text-gray-600">Choose from premium neural voices, styles, and adjust speech rate, pitch, and volume.</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Headphones className="w-4 h-4 text-green-600" />
+                <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Headphones className="w-3.5 h-3.5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-1">3. Generate & Download</h3>
-                  <p className="text-sm text-gray-600">Get high-quality MP3 files instantly. Manage your audio library with play, download, and organize features.</p>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">3. Generate & Download</h3>
+                  <p className="text-xs text-gray-600">Get high-quality MP3 files instantly. Manage your audio library with play, download, and organize features.</p>
                 </div>
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-4 border-t border-blue-200">
-              <div className="flex flex-wrap gap-4 text-sm text-blue-800">
-                <span>• Preview: First 200 characters</span>
-                <span>• Full generation: Entire text</span>
-                <span>• High-quality MP3 downloads</span>
-                <span>• Advanced voice controls</span>
               </div>
             </div>
           </div>
