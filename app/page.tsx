@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones } from 'lucide-react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
+import ThemeToggle from './components/ThemeToggle'
+
 
 interface AudioFile {
   id: string
@@ -27,7 +29,7 @@ export default function Home() {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
 
   const generateFileName = (isPreview: boolean) => {
-    const voiceName = selectedVoice.split('-')[2] || 'Unknown' // Extract name from shortName
+    const voiceName = selectedVoice.split('-')[2] || 'Unknown'
     const timestamp = new Date().toLocaleString('en-US', {
       month: 'short',
       day: '2-digit',
@@ -159,69 +161,74 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <Volume2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Prosodify Studio
-              </h1>
-              <p className="text-sm text-gray-600">Professional Text-to-Speech Generator</p>
-            </div>
-          </div>
+      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-300">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+          <Volume2 className="w-6 h-6 text-white" />
         </div>
-      </header>
+        <div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Prosodify Studio
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Professional Text-to-Speech Generator</p>
+        </div>
+      </div>
+      
+      {/* Theme Toggle */}
+      <ThemeToggle />
+    </div>
+  </div>
+</header>
 
-      {/* How It Works Section - Now at Top */}
+      {/* How It Works Section */}
       {showHowItWorks && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200 relative">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 relative transition-colors duration-300">
             <button
               onClick={() => setShowHowItWorks(false)}
-              className="absolute top-4 right-4 p-1 hover:bg-white rounded-full transition-colors duration-200"
+              className="absolute top-4 right-4 p-1 hover:bg-white dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
               aria-label="Close how it works"
             >
-              <X className="w-5 h-5 text-gray-500 hover:text-gray-700" />
+              <X className="w-5 h-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
             </button>
             
             <div className="flex items-center space-x-2 mb-4">
-              <Info className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">How Prosodify Works</h2>
+              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">How Prosodify Works</h2>
             </div>
             
             <div className="grid md:grid-cols-3 gap-4">
               <div className="flex items-start space-x-3">
-                <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">1. Enter Your Text</h3>
-                  <p className="text-xs text-gray-600">Type or paste up to 5,000 characters. Preview first 200 characters or generate the full audio.</p>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">1. Enter Your Text</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Type or paste up to 5,000 characters. Preview first 200 characters or generate the full audio.</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
-                <div className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Mic className="w-3.5 h-3.5 text-purple-600" />
+                <div className="w-7 h-7 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Mic className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">2. Customize Voice</h3>
-                  <p className="text-xs text-gray-600">Choose from premium neural voices, styles, and adjust speech rate, pitch, and volume.</p>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">2. Customize Voice</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Choose from premium neural voices, styles, and adjust speech rate, pitch, and volume.</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3">
-                <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Headphones className="w-3.5 h-3.5 text-green-600" />
+                <div className="w-7 h-7 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Headphones className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">3. Generate & Download</h3>
-                  <p className="text-xs text-gray-600">Get high-quality MP3 files instantly. Manage your audio library with play, download, and organize features.</p>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">3. Generate & Download</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Get high-quality MP3 files instantly. Manage your audio library with play, download, and organize features.</p>
                 </div>
               </div>
             </div>
@@ -234,18 +241,18 @@ export default function Home() {
           
           {/* Left Column - Text Input */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-300">
               <div className="relative">
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Enter your text here... You can write up to 5,000 characters for speech synthesis."
-                  className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pr-4 pb-16"
+                  className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pr-4 pb-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={5000}
                 />
                 
                 <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     <span>Characters: {text.length}/5,000</span>
                     <span className="ml-4">Cost: ${(text.length * 0.000015).toFixed(4)}</span>
                   </div>
@@ -254,7 +261,7 @@ export default function Home() {
                     <button
                       onClick={() => handleGenerate(true)}
                       disabled={isGenerating || !text.trim() || !selectedVoice}
-                      className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
                       <Play className="w-4 h-4 mr-1" />
                       {isGenerating ? '...' : 'Preview'}
@@ -297,12 +304,12 @@ export default function Home() {
             />
 
             {/* Speech Controls */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Speech Controls</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Speech Controls</h3>
               
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Speech Rate: {speechRate.toFixed(1)}x
                   </label>
                   <input
@@ -312,9 +319,9 @@ export default function Home() {
                     step="0.1"
                     value={speechRate}
                     onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                     <span>Slow</span>
                     <span>Normal</span>
                     <span>Fast</span>
@@ -322,7 +329,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Pitch: {pitch.toFixed(1)}x
                   </label>
                   <input
@@ -332,9 +339,9 @@ export default function Home() {
                     step="0.1"
                     value={pitch}
                     onChange={(e) => setPitch(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                     <span>Low</span>
                     <span>Normal</span>
                     <span>High</span>
@@ -342,7 +349,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Volume: {Math.round(volume * 100)}%
                   </label>
                   <input
@@ -352,9 +359,9 @@ export default function Home() {
                     step="0.1"
                     value={volume}
                     onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                     <span>Quiet</span>
                     <span>Normal</span>
                     <span>Loud</span>
