@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Play, Download, Volume2 } from 'lucide-react'
+import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones } from 'lucide-react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
 
@@ -23,6 +23,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([])
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
+  const [showHowItWorks, setShowHowItWorks] = useState(true)
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
 
   const generateFileName = (isPreview: boolean) => {
@@ -176,6 +177,67 @@ export default function Home() {
         </div>
       </header>
 
+      {/* How It Works Section - Now at Top */}
+      {showHowItWorks && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200 relative">
+            <button
+              onClick={() => setShowHowItWorks(false)}
+              className="absolute top-4 right-4 p-1 hover:bg-white rounded-full transition-colors duration-200"
+              aria-label="Close how it works"
+            >
+              <X className="w-5 h-5 text-gray-500 hover:text-gray-700" />
+            </button>
+            
+            <div className="flex items-center space-x-2 mb-4">
+              <Info className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">How Prosodify Works</h2>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">1. Enter Your Text</h3>
+                  <p className="text-sm text-gray-600">Type or paste up to 5,000 characters. Preview first 200 characters or generate the full audio.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Mic className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">2. Customize Voice</h3>
+                  <p className="text-sm text-gray-600">Choose from premium neural voices, styles, and adjust speech rate, pitch, and volume.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Headphones className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-1">3. Generate & Download</h3>
+                  <p className="text-sm text-gray-600">Get high-quality MP3 files instantly. Manage your audio library with play, download, and organize features.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <div className="flex flex-wrap gap-4 text-sm text-blue-800">
+                <span>• Preview: First 200 characters</span>
+                <span>• Full generation: Entire text</span>
+                <span>• High-quality MP3 downloads</span>
+                <span>• Advanced voice controls</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
@@ -308,17 +370,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Info Panel */}
-            <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">How it works</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Preview generates first 200 characters</li>
-                <li>• Full generation processes entire text</li>
-                <li>• Downloads high-quality MP3 audio</li>
-                <li>• Supports advanced voice controls</li>
-              </ul>
             </div>
           </div>
         </div>
