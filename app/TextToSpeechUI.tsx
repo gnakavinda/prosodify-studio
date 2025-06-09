@@ -407,24 +407,71 @@ const SliderControl = ({
   max: number
   step: number
   labels: string[]
-}) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-      {label}
-    </label>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(e) => onChange(parseFloat(e.target.value))}
-      className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-    />
-    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-      {labels.map((label, index) => (
-        <span key={index}>{label}</span>
-      ))}
+}) => {
+  // Calculate the percentage for the blue fill
+  const percentage = ((value - min) / (max - min)) * 100
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
+          }}
+        />
+        <style jsx>{`
+          input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          input[type="range"]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            appearance: none;
+          }
+          
+          .dark input[type="range"] {
+            background: linear-gradient(to right, #60a5fa 0%, #60a5fa ${percentage}%, #374151 ${percentage}%, #374151 100%) !important;
+          }
+          
+          .dark input[type="range"]::-webkit-slider-thumb {
+            background: #60a5fa;
+            border-color: #1f2937;
+          }
+          
+          .dark input[type="range"]::-moz-range-thumb {
+            background: #60a5fa;
+            border-color: #1f2937;
+          }
+        `}</style>
+      </div>
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+        {labels.map((label, index) => (
+          <span key={index}>{label}</span>
+        ))}
+      </div>
     </div>
-  </div>
-)
+  )
+}
