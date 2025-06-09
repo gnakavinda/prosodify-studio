@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useRef } from 'react'
 
 export interface AudioFile {
@@ -8,48 +10,42 @@ export interface AudioFile {
   timestamp: string
 }
 
-export const useTextToSpeechLogic = () => {
-  // State management
+export function useTextToSpeechLogic() {
+  // Core state
   const [text, setText] = useState('')
   const [selectedVoice, setSelectedVoice] = useState('')
-  const [voiceStyle, setVoiceStyle] = useState('neutral')
+  const [voiceStyle, setVoiceStyle] = useState('default')
   const [speechRate, setSpeechRate] = useState(1)
   const [pitch, setPitch] = useState(1)
   const [volume, setVolume] = useState(1)
+  
+  // UI state
   const [isGenerating, setIsGenerating] = useState(false)
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([])
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
-  const [showHowItWorks, setShowHowItWorks] = useState(true)
-  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({})
+  const [showHowItWorks, setShowHowItWorks] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Utility functions
-  const generateFileName = (isPreview: boolean) => {
-    const voiceName = selectedVoice.split('-')[2] || 'Unknown'
-    const timestamp = new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(',', '').replace(/:/g, '-')
-    
-    const suffix = isPreview ? '_preview' : ''
-    return `${voiceName}_${voiceStyle}_${timestamp}${suffix}`
-  }
+  // Audio reference for playback
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Core business logic
+  // Generate speech audio
   const handleGenerate = async (isPreview = false) => {
-    setIsGenerating(true);
+    if (!text.trim() || !selectedVoice) {
+      setError('Please enter text and select a voice.')
+      return
+    }
+
+    setIsGenerating(true)
+    setError(null)
+
     try {
-      const textToUse = isPreview 
-        ? text.substring(0, 200) + (text.length > 200 ? '...' : '')
-        : text
+      // Use first 200 characters for preview, full text for generation
+      const textToUse = isPreview ? text.substring(0, 200) : text
 
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: textToUse,
           voice: selectedVoice,
@@ -57,105 +53,180 @@ export const useTextToSpeechLogic = () => {
           rate: speechRate,
           pitch: pitch,
           volume: volume
-        }),
-      });
+        })
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.success) {
-        const audioBlob = new Blob(
-          [Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))],
-          { type: 'audio/mp3' }
-        );
-        const url = URL.createObjectURL(audioBlob);
-        
-        const fileName = generateFileName(isPreview)
+        // Create audio blob and URL
+        const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { 
+          type: 'audio/mpeg' 
+        })
+        const audioUrl = URL.createObjectURL(audioBlob)
+
+        // Generate friendly filename
+        const voiceName = selectedVoice.split('-').slice(-1)[0].replace('Neural', '')
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-')
+        const filename = isPreview 
+          ? `Preview_${voiceName}_${voiceStyle}_${timestamp}`
+          : `${voiceName}_${voiceStyle}_${timestamp}`
+
+        // Create new audio file object
         const newAudioFile: AudioFile = {
           id: Date.now().toString(),
-          name: fileName,
-          url: url,
+          name: filename,
+          url: audioUrl,
           isPreview: isPreview,
-          timestamp: new Date().toLocaleTimeString()
+          timestamp: new Date().toLocaleString()
         }
-        
+
+        // Add to audio files list (newest first)
         setAudioFiles(prev => [newAudioFile, ...prev])
-        
-        if (!isPreview) {
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `${fileName}.mp3`;
-          link.click();
+
+        // Auto-play if it's a preview
+        if (isPreview) {
+          handlePlay(newAudioFile)
         }
-        
-        const message = isPreview 
-          ? 'Preview generated successfully!'
-          : 'Audio generated successfully! Download started.'
-        alert(message);
+
       } else {
-        alert('Error generating audio: ' + data.error);
+        setError(data.error || 'Failed to generate speech')
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error generating audio. Please try again.');
+      console.error('Generation error:', error)
+      setError('Network error. Please check your connection and try again.')
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
-  // Audio playback management
+  // Play audio file
   const handlePlay = (audioFile: AudioFile) => {
-    if (currentlyPlaying && audioRefs.current[currentlyPlaying]) {
-      audioRefs.current[currentlyPlaying].pause()
-      audioRefs.current[currentlyPlaying].currentTime = 0
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
     }
 
-    if (!audioRefs.current[audioFile.id]) {
-      const audio = new Audio(audioFile.url)
-      audio.onended = () => setCurrentlyPlaying(null)
-      audioRefs.current[audioFile.id] = audio
+    // Create new audio element
+    const audio = new Audio(audioFile.url)
+    audioRef.current = audio
+
+    // Set up event listeners
+    audio.onplay = () => {
+      setCurrentlyPlaying(audioFile.id)
     }
 
-    audioRefs.current[audioFile.id].play()
-    setCurrentlyPlaying(audioFile.id)
-  }
-
-  const handleStop = () => {
-    if (currentlyPlaying && audioRefs.current[currentlyPlaying]) {
-      audioRefs.current[currentlyPlaying].pause()
-      audioRefs.current[currentlyPlaying].currentTime = 0
+    audio.onended = () => {
       setCurrentlyPlaying(null)
+      audioRef.current = null
     }
+
+    audio.onerror = () => {
+      console.error('Audio playback error')
+      setCurrentlyPlaying(null)
+      audioRef.current = null
+      setError('Error playing audio. The file may be corrupted.')
+    }
+
+    // Start playback
+    audio.play().catch(error => {
+      console.error('Play error:', error)
+      setCurrentlyPlaying(null)
+      audioRef.current = null
+      setError('Could not play audio. Please try again.')
+    })
   }
 
-  // File management
+  // Stop audio playback
+  const handleStop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current = null
+    }
+    setCurrentlyPlaying(null)
+  }
+
+  // Download audio file
   const handleDownload = (audioFile: AudioFile) => {
-    const link = document.createElement('a');
-    link.href = audioFile.url;
-    link.download = `${audioFile.name}.mp3`;
-    link.click();
-  }
-
-  const handleRemoveFile = (audioId: string) => {
-    const audioFile = audioFiles.find(f => f.id === audioId)
-    if (audioFile) {
-      if (currentlyPlaying === audioId) {
-        handleStop()
-      }
-      if (audioRefs.current[audioId]) {
-        delete audioRefs.current[audioId]
-      }
-      URL.revokeObjectURL(audioFile.url)
-      setAudioFiles(prev => prev.filter(f => f.id !== audioId))
+    try {
+      const link = document.createElement('a')
+      link.href = audioFile.url
+      link.download = `${audioFile.name}.mp3`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error('Download error:', error)
+      setError('Failed to download file. Please try again.')
     }
   }
 
+  // Remove single audio file
+  const handleRemoveFile = (audioId: string) => {
+    // Stop if currently playing
+    if (currentlyPlaying === audioId) {
+      handleStop()
+    }
+
+    // Remove from list and revoke URL to prevent memory leaks
+    setAudioFiles(prev => {
+      const fileToRemove = prev.find(f => f.id === audioId)
+      if (fileToRemove) {
+        URL.revokeObjectURL(fileToRemove.url)
+      }
+      return prev.filter(f => f.id !== audioId)
+    })
+  }
+
+  // Clear all audio files
   const handleClearAllFiles = () => {
+    // Stop any playing audio
+    handleStop()
+
+    // Revoke all URLs to prevent memory leaks
     audioFiles.forEach(file => {
       URL.revokeObjectURL(file.url)
     })
+
+    // Clear the list
     setAudioFiles([])
-    setCurrentlyPlaying(null)
-    audioRefs.current = {}
+  }
+
+  // Calculate estimated cost (Azure pricing: ~$15 per 1M characters)
+  const getEstimatedCost = (textLength: number) => {
+    return (textLength * 0.000015).toFixed(4)
+  }
+
+  // Get character count and validation
+  const getTextStats = () => {
+    const charCount = text.length
+    const isValid = charCount > 0 && charCount <= 5000
+    const previewLength = Math.min(charCount, 200)
+    
+    return {
+      charCount,
+      isValid,
+      previewLength,
+      cost: getEstimatedCost(charCount),
+      previewCost: getEstimatedCost(previewLength)
+    }
+  }
+
+  // Reset form to defaults
+  const resetForm = () => {
+    setText('')
+    setSpeechRate(1)
+    setPitch(1)
+    setVolume(1)
+    setVoiceStyle('default')
+    setError(null)
+  }
+
+  // Dismiss error
+  const dismissError = () => {
+    setError(null)
   }
 
   return {
@@ -177,13 +248,20 @@ export const useTextToSpeechLogic = () => {
     currentlyPlaying,
     showHowItWorks,
     setShowHowItWorks,
-    
+    error,
+
     // Actions
     handleGenerate,
     handlePlay,
     handleStop,
     handleDownload,
     handleRemoveFile,
-    handleClearAllFiles
+    handleClearAllFiles,
+    resetForm,
+    dismissError,
+
+    // Utilities
+    getTextStats,
+    getEstimatedCost
   }
 }
