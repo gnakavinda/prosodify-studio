@@ -5,7 +5,7 @@ import { useState } from 'react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
 import ThemeToggle from './components/ThemeToggle'
-import { useTextToSpeechLogic, AudioFile } from './TextToSpeechLogic'
+import { useTextToSpeechLogic } from './TextToSpeechLogic'
 
 export default function TextToSpeechUI() {
   const {
