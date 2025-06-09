@@ -38,12 +38,9 @@ export default function TextToSpeechUI() {
     getTextStats
   } = useTextToSpeechLogic()
 
-  // State for collapsible sections
-  const [expandedSection, setExpandedSection] = useState<'voice' | 'speech' | null>('voice')
-
-  const toggleSection = (section: 'voice' | 'speech') => {
-    setExpandedSection(expandedSection === section ? null : section)
-  }
+  // State for collapsible sections - make them independent
+  const [voiceExpanded, setVoiceExpanded] = useState(true)
+  const [speechExpanded, setSpeechExpanded] = useState(false)
 
   // Get text statistics
   const textStats = getTextStats()
@@ -91,31 +88,50 @@ export default function TextToSpeechUI() {
           </div>
 
           {/* Right Column - Collapsible Controls */}
-          <div className="space-y-4">
+          <div className="space-y-4 relative overflow-visible">
             
             {/* Voice Settings Section */}
-            <CollapsibleSection
-              title="Voice Settings"
-              icon={<Settings className="w-4 h-4" />}
-              isExpanded={expandedSection === 'voice'}
-              onToggle={() => toggleSection('voice')}
-              badge={selectedVoice ? '✓' : '!'}
-            >
-              <VoiceSettings
-                selectedVoice={selectedVoice}
-                setSelectedVoice={setSelectedVoice}
-                voiceStyle={voiceStyle}
-                setVoiceStyle={setVoiceStyle}
-              />
-            </CollapsibleSection>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300 overflow-visible">
+              {/* Header - Always visible */}
+              <button
+                onClick={() => setVoiceExpanded(!voiceExpanded)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    Voice Settings
+                  </h3>
+                </div>
+                
+                <div className="text-gray-400 dark:text-gray-500">
+                  {voiceExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </div>
+              </button>
+
+              {/* Content - Expandable */}
+              {voiceExpanded && (
+                <div className="px-4 pb-4 overflow-visible">
+                  <VoiceSettings
+                    selectedVoice={selectedVoice}
+                    setSelectedVoice={setSelectedVoice}
+                    voiceStyle={voiceStyle}
+                    setVoiceStyle={setVoiceStyle}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Speech Controls Section */}
             <CollapsibleSection
               title="Speech Controls"
-              icon={<Sliders className="w-4 h-4" />}
-              isExpanded={expandedSection === 'speech'}
-              onToggle={() => toggleSection('speech')}
-              badge={speechRate !== 1 || pitch !== 1 || volume !== 1 ? '●' : ''}
+              icon={null}
+              isExpanded={speechExpanded}
+              onToggle={() => setSpeechExpanded(!speechExpanded)}
+              badge=""
             >
               <SpeechControlsSection
                 speechRate={speechRate}
@@ -126,13 +142,6 @@ export default function TextToSpeechUI() {
                 setVolume={setVolume}
               />
             </CollapsibleSection>
-
-            {/* Quick Actions Panel */}
-            <QuickActionsPanel
-              onShowHowItWorks={() => setShowHowItWorks(true)}
-              onResetForm={resetForm}
-              textStats={textStats}
-            />
           </div>
         </div>
       </div>
@@ -182,20 +191,22 @@ const CollapsibleSection = ({
   children: React.ReactNode
   badge?: string
 }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300 overflow-hidden">
+  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
     {/* Header - Always visible */}
     <button
       onClick={onToggle}
       className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
     >
       <div className="flex items-center space-x-2">
-        <div className="text-gray-600 dark:text-gray-400">
-          {icon}
-        </div>
+        {icon && (
+          <div className="text-gray-600 dark:text-gray-400">
+            {icon}
+          </div>
+        )}
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
           {title}
         </h3>
-        {badge && (
+        {badge && badge !== "" && (
           <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
             {badge}
           </span>
@@ -212,15 +223,11 @@ const CollapsibleSection = ({
     </button>
 
     {/* Content - Expandable */}
-    <div className={`transition-all duration-300 ease-in-out ${
-      isExpanded 
-        ? 'max-h-[800px] opacity-100' 
-        : 'max-h-0 opacity-0'
-    } overflow-hidden`}>
+    {isExpanded && (
       <div className="px-4 pb-4">
         {children}
       </div>
-    </div>
+    )}
   </div>
 )
 
@@ -234,7 +241,7 @@ const Header = () => (
             <Volume2 className="w-4 h-4 text-white dark:text-black" />
           </div>
           <h1 className="text-lg font-medium text-gray-900 dark:text-white">
-            Prosodify Studio
+            Text to Speech
           </h1>
         </div>
         
@@ -331,10 +338,12 @@ const TextInputSection = ({
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
     <div className="flex items-center justify-between mb-3">
+      <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">Text to Speech</h2>
       <button
         onClick={resetForm}
         className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
       >
+        Reset
       </button>
     </div>
     
@@ -343,7 +352,7 @@ const TextInputSection = ({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type or paste your text here..."
-        className="w-full h-48 p-3 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+        className="w-full h-80 p-3 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
         maxLength={5000}
       />
       
@@ -368,7 +377,7 @@ const TextInputSection = ({
             disabled={isGenerating || !textStats.isValid || !selectedVoice}
             variant="primary"
             icon={<Download className="w-3 h-3 mr-1" />}
-            text={isGenerating ? 'Generating...' : 'Generate speech'}
+            text={isGenerating ? 'Generating...' : 'Regenerate speech'}
           />
         </div>
       </div>
@@ -549,43 +558,3 @@ const SliderControl = ({
     </div>
   )
 }
-
-// Quick Actions Panel Component
-const QuickActionsPanel = ({
-  onShowHowItWorks,
-  onResetForm,
-  textStats
-}: {
-  onShowHowItWorks: () => void
-  onResetForm: () => void
-  textStats: any
-}) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Quick Actions</h3>
-    
-    <div className="space-y-2">
-      <button
-        onClick={onShowHowItWorks}
-        className="w-full text-left p-2 rounded-md bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-      >
-        <div className="flex items-center">
-          <Info className="w-3 h-3 text-gray-600 dark:text-gray-400 mr-2" />
-          <div>
-            <div className="text-xs font-medium text-gray-900 dark:text-gray-100">How It Works</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Learn how to use Prosodify</div>
-          </div>
-        </div>
-      </button>
-
-      <div className="p-2 rounded-md bg-gray-50 dark:bg-gray-700">
-        <div className="text-xs font-medium text-gray-900 dark:text-gray-100 mb-1">Statistics</div>
-        <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
-          <div>• 563 voices available</div>
-          <div>• 154 languages supported</div>
-          <div>• 43 speaking styles</div>
-          <div>• Characters: {textStats.charCount}/5,000</div>
-        </div>
-      </div>
-    </div>
-  </div>
-)

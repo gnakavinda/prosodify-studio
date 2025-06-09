@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader, Search, Filter, X, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Loader, AlertCircle, ChevronDown, Search, X } from 'lucide-react'
 
 interface Voice {
   id: string;
@@ -28,6 +28,144 @@ interface VoiceSettingsProps {
   setVoiceStyle: (style: string) => void;
 }
 
+interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+// Custom Dropdown Component with Search
+interface SearchableDropdownProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: DropdownOption[];
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+function SearchableDropdown({ 
+  label, 
+  value, 
+  onChange, 
+  options, 
+  placeholder = "Select...",
+  disabled = false 
+}: SearchableDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Filter options based on search term
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Get display label for selected value
+  const selectedOption = options.find(option => option.value === value)
+  const displayLabel = selectedOption ? selectedOption.label : placeholder
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+        setSearchTerm('')
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Handle option selection
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue)
+    setIsOpen(false)
+    setSearchTerm('')
+  }
+
+  // Clear search when dropdown closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchTerm('')
+    }
+  }, [isOpen])
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {label}
+      </label>
+      
+      {/* Dropdown Trigger */}
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+        className={`w-full p-2 text-left border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 flex items-center justify-between ${
+          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-600'
+        }`}
+      >
+        <span className={value ? '' : 'text-gray-500 dark:text-gray-400'}>
+          {displayLabel}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-xl max-h-80 overflow-hidden">
+          {/* Search Box */}
+          <div className="p-3 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 sticky top-0">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-8 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Options List */}
+          <div className="max-h-60 overflow-y-auto bg-white dark:bg-gray-700">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleSelect(option.value)}
+                  className={`w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-none ${
+                    value === option.value 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium' 
+                      : 'text-gray-900 dark:text-gray-100'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                No results found
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function VoiceSettings({ 
   selectedVoice, 
   setSelectedVoice, 
@@ -38,7 +176,6 @@ export default function VoiceSettings({
   const [groupedVoices, setGroupedVoices] = useState<Record<string, GroupedVoices>>({})
   const [isLoadingVoices, setIsLoadingVoices] = useState(true)
   const [voicesError, setVoicesError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
 
@@ -102,24 +239,14 @@ export default function VoiceSettings({
     }
   }, [selectedVoice, voiceStyle, setVoiceStyle, voices])
 
-  // Filter voices based on search and filters
+  // Filter voices based on language and gender
   const getFilteredVoices = () => {
     if (voices.length === 0) return []
 
     return voices.filter(voice => {
-      // Search filter
-      const matchesSearch = searchTerm === '' || 
-        voice.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        voice.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        voice.localeName.toLowerCase().includes(searchTerm.toLowerCase())
-
-      // Language filter
       const matchesLanguage = selectedLanguage === 'all' || voice.locale === selectedLanguage
-      
-      // Gender filter
       const matchesGender = selectedGender === 'all' || voice.gender.toLowerCase() === selectedGender.toLowerCase()
-
-      return matchesSearch && matchesLanguage && matchesGender
+      return matchesLanguage && matchesGender
     })
   }
 
@@ -135,43 +262,38 @@ export default function VoiceSettings({
     return genders.sort()
   }
 
-  // Helper functions for display
-  const getCountryFlag = (locale: string) => {
-    const flagMap: Record<string, string> = {
-      // English variants
-      'en-US': '🇺🇸', 'en-GB': '🇬🇧', 'en-AU': '🇦🇺', 'en-CA': '🇨🇦', 'en-IN': '🇮🇳',
-      'en-IE': '🇮🇪', 'en-ZA': '🇿🇦', 'en-NZ': '🇳🇿', 'en-SG': '🇸🇬', 'en-HK': '🇭🇰',
-      'en-PH': '🇵🇭', 'en-KE': '🇰🇪', 'en-NG': '🇳🇬', 'en-TZ': '🇹🇿',
-      // Major languages
-      'es-ES': '🇪🇸', 'es-MX': '🇲🇽', 'es-AR': '🇦🇷', 'es-US': '🇺🇸', 'es-CO': '🇨🇴',
-      'fr-FR': '🇫🇷', 'fr-CA': '🇨🇦', 'fr-CH': '🇨🇭', 'fr-BE': '🇧🇪',
-      'de-DE': '🇩🇪', 'de-AT': '🇦🇹', 'de-CH': '🇨🇭',
-      'it-IT': '🇮🇹', 'pt-BR': '🇧🇷', 'pt-PT': '🇵🇹',
-      'ja-JP': '🇯🇵', 'ko-KR': '🇰🇷', 'zh-CN': '🇨🇳', 'zh-TW': '🇹🇼', 'zh-HK': '🇭🇰',
-      'hi-IN': '🇮🇳', 'ar-SA': '🇸🇦', 'ar-AE': '🇦🇪', 'ar-EG': '🇪🇬',
-      'ru-RU': '🇷🇺', 'th-TH': '🇹🇭', 'vi-VN': '🇻🇳', 'tr-TR': '🇹🇷'
-    }
-    return flagMap[locale] || '🌍'
-  }
+  // Prepare dropdown options
+  const languageOptions: DropdownOption[] = [
+    { value: 'all', label: 'All Languages' },
+    ...getAvailableLanguages().map(language => {
+      const group = groupedVoices[language]
+      return {
+        value: language,
+        label: group?.localeName || language
+      }
+    })
+  ]
 
-  const getGenderIcon = (gender: string) => {
-    if (gender.toLowerCase() === 'male') return '👨'
-    if (gender.toLowerCase() === 'female') return '👩'
-    return '👤'
-  }
+  const genderOptions: DropdownOption[] = [
+    { value: 'all', label: 'All Genders' },
+    ...getAvailableGenders().map(gender => ({
+      value: gender,
+      label: gender
+    }))
+  ]
 
-  const getStyleIcon = (style: string) => {
-    const styleIcons: Record<string, string> = {
-      'default': '🎭', 'neutral': '😐', 'cheerful': '😊', 'sad': '😢', 'angry': '😠',
-      'excited': '🤩', 'friendly': '😄', 'unfriendly': '😒', 'terrified': '😰',
-      'shouting': '📢', 'whispering': '🤫', 'empathetic': '🤗', 'calm': '😌',
-      'serious': '😐', 'hopeful': '🙂', 'gentle': '😊', 'assistant': '🤖',
-      'chat': '💬', 'customerservice': '👔', 'newscast': '📺', 'advertisement': '📢',
-      'narration-professional': '📖', 'narration-relaxed': '📚', 'documentary-narration': '🎬',
-      'poetry-reading': '📜', 'sports-commentary': '⚽', 'livecommercial': '📺'
-    }
-    return styleIcons[style.toLowerCase()] || '🎭'
-  }
+  const voiceOptions: DropdownOption[] = [
+    { value: '', label: 'Select a voice...' },
+    ...getFilteredVoices().map(voice => ({
+      value: voice.shortName,
+      label: `${voice.name} - ${voice.localeName}`
+    }))
+  ]
+
+  const styleOptions: DropdownOption[] = getAvailableStyles().map(style => ({
+    value: style,
+    label: style.charAt(0).toUpperCase() + style.slice(1).replace(/-/g, ' ')
+  }))
 
   // Loading state
   if (isLoadingVoices) {
@@ -204,151 +326,62 @@ export default function VoiceSettings({
     )
   }
 
-  // Get filtered voices
-  const filteredVoices = getFilteredVoices()
-
   return (
     <div className="space-y-4">
-      
-      {/* Voice Filters */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3 transition-colors duration-300">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            <Filter className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters</span>
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {voices.length} voices available
-          </div>
-        </div>
-        
-        {/* Search Box */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search voices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+      {/* Language Dropdown */}
+      <SearchableDropdown
+        label="Language"
+        value={selectedLanguage}
+        onChange={setSelectedLanguage}
+        options={languageOptions}
+        placeholder="Select language..."
+      />
 
-        {/* Language and Gender Filters */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Language</label>
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-            >
-              <option value="all">All Languages</option>
-              {getAvailableLanguages().map((language) => {
-                const group = groupedVoices[language]
-                return (
-                  <option key={language} value={language}>
-                    {group?.localeName || language}
-                  </option>
-                )
-              })}
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gender</label>
-            <select
-              value={selectedGender}
-              onChange={(e) => setSelectedGender(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-            >
-              <option value="all">All Genders</option>
-              {getAvailableGenders().map((gender) => (
-                <option key={gender} value={gender}>
-                  {gender}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Gender Dropdown */}
+      <SearchableDropdown
+        label="Gender"
+        value={selectedGender}
+        onChange={setSelectedGender}
+        options={genderOptions}
+        placeholder="Select gender..."
+      />
+
+      {/* Voice Dropdown */}
+      <SearchableDropdown
+        label="Voice"
+        value={selectedVoice}
+        onChange={setSelectedVoice}
+        options={voiceOptions}
+        placeholder="Select a voice..."
+      />
+
+      {/* Style Dropdown */}
+      <SearchableDropdown
+        label="Style"
+        value={voiceStyle}
+        onChange={setVoiceStyle}
+        options={styleOptions}
+        placeholder="Select style..."
+        disabled={!selectedVoice}
+      />
+
+      {/* No results message */}
+      {getFilteredVoices().length === 0 && voices.length > 0 && selectedLanguage !== 'all' && (
+        <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+            No voices found for the selected filters.
+          </p>
+          <button 
+            onClick={() => {
+              setSelectedLanguage('all')
+              setSelectedGender('all')
+            }}
+            className="mt-2 text-xs text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 underline"
+          >
+            Clear all filters
+          </button>
         </div>
-
-        {/* Filter Results Counter */}
-        <div className="text-xs text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200 dark:border-gray-600">
-          Showing {filteredVoices.length} of {voices.length} voices
-        </div>
-      </div>
-
-      {/* Voice Selection Dropdown */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Select Voice
-        </label>
-        <select
-          value={selectedVoice}
-          onChange={(e) => setSelectedVoice(e.target.value)}
-          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-        >
-          <option value="">Select a voice...</option>
-          {filteredVoices.map((voice) => (
-            <option key={voice.shortName} value={voice.shortName}>
-              {voice.name} - {voice.localeName}
-            </option>
-          ))}
-        </select>
-        
-        {/* No results message */}
-        {filteredVoices.length === 0 && voices.length > 0 && (
-          <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-              No voices found matching your filters. Try adjusting your search criteria.
-            </p>
-            <button 
-              onClick={() => {
-                setSearchTerm('')
-                setSelectedLanguage('all')
-                setSelectedGender('all')
-              }}
-              className="mt-2 text-xs text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 underline"
-            >
-              Clear all filters
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Style Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Speaking Style ({getAvailableStyles().length} available)
-        </label>
-        <select
-          value={voiceStyle}
-          onChange={(e) => setVoiceStyle(e.target.value)}
-          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          disabled={!selectedVoice}
-        >
-          {getAvailableStyles().map((style) => (
-            <option key={style} value={style}>
-              {style.charAt(0).toUpperCase() + style.slice(1).replace(/-/g, ' ')}
-            </option>
-          ))}
-        </select>
-        
-        {/* Style Info */}
-        {selectedVoice && getAvailableStyles().length > 1 && (
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            This voice supports {getAvailableStyles().length} different speaking styles
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
