@@ -241,7 +241,7 @@ const Header = () => (
             <Volume2 className="w-4 h-4 text-white dark:text-black" />
           </div>
           <h1 className="text-lg font-medium text-gray-900 dark:text-white">
-            Text to Speech
+            Prosodify Studio
           </h1>
         </div>
         
@@ -337,24 +337,23 @@ const TextInputSection = ({
   resetForm: () => void
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-    <div className="flex items-center justify-between mb-3">
-      <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">Text to Speech</h2>
-      <button
-        onClick={resetForm}
-        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-      >
-        Reset
-      </button>
-    </div>
-    
     <div className="relative">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type or paste your text here..."
-        className="w-full h-80 p-3 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+        className="w-full h-80 p-3 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
         maxLength={5000}
       />
+      
+      {/* Reset button - top right corner */}
+      <button
+        onClick={resetForm}
+        className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
+        title="Reset form"
+      >
+        <X className="w-4 h-4" />
+      </button>
       
       <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
         <div className="text-xs text-gray-500 dark:text-gray-400">
