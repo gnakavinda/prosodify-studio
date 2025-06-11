@@ -1,7 +1,7 @@
 'use client'
 
-import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react'
-import { useState } from 'react'
+import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, ChevronRight, AlertCircle, Pause, SkipBack, SkipForward, Share, Settings, History, Minimize2, Maximize2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
 import ThemeToggle from './components/ThemeToggle'
@@ -38,12 +38,48 @@ export default function TextToSpeechUI() {
     getTextStats
   } = useTextToSpeechLogic()
 
-  // State for collapsible sections - make them independent
-  const [voiceExpanded, setVoiceExpanded] = useState(true)
-  const [speechExpanded, setSpeechExpanded] = useState(false)
+  // State for right panel tabs
+  const [activeTab, setActiveTab] = useState<'settings' | 'history'>('settings')
+  
+  // State for footer audio player  
+  const [showPlayer, setShowPlayer] = useState(false)
+  const [isPlayerMinimized, setIsPlayerMinimized] = useState(false)
+  const [lastPlayedAudio, setLastPlayedAudio] = useState<any>(null)
 
   // Get text statistics
   const textStats = getTextStats()
+
+  // Get currently playing audio file for the player
+  const currentAudioFile = audioFiles.find(file => file.id === currentlyPlaying)
+
+  // Show player when audio file exists or was recently played
+  useEffect(() => {
+    if (currentAudioFile) {
+      setShowPlayer(true)
+      setLastPlayedAudio(currentAudioFile)
+    }
+    // Don't hide player when audio stops - keep it with last played audio
+  }, [currentAudioFile])
+
+  // Auto-play newly generated audio
+  useEffect(() => {
+    if (audioFiles.length > 0) {
+      const latestAudio = audioFiles[audioFiles.length - 1]
+      
+      // Check if this is a new audio file (created in last 2 seconds)
+      const now = new Date()
+      const audioTime = new Date(latestAudio.timestamp)
+      const timeDiff = now.getTime() - audioTime.getTime()
+      
+      if (timeDiff < 2000 && latestAudio.id !== currentlyPlaying) {
+        // Auto-play the latest generated audio
+        handlePlay(latestAudio)
+      }
+    }
+  }, [audioFiles, currentlyPlaying, handlePlay])
+
+  // Get the audio file to display in player (current or last played)
+  const playerAudioFile = currentAudioFile || lastPlayedAudio
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
@@ -60,11 +96,12 @@ export default function TextToSpeechUI() {
         <ErrorBanner error={error} onDismiss={dismissError} />
       )}
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Content - Full Width Layout */}
+      <div className="px-6 py-6">
+        <div className="flex gap-6 h-[calc(100vh-140px)]">
           
-          {/* Left Column - Text Input */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Left Column - Text Input (60% width) */}
+          <div className="flex-[0_0_60%] flex flex-col">
             <TextInputSection
               text={text}
               setText={setText}
@@ -74,80 +111,433 @@ export default function TextToSpeechUI() {
               handleGenerate={handleGenerate}
               resetForm={resetForm}
             />
-
-            {/* Audio File Manager */}
-            <AudioFileManager
-              audioFiles={audioFiles}
-              currentlyPlaying={currentlyPlaying}
-              onPlay={handlePlay}
-              onStop={handleStop}
-              onDownload={handleDownload}
-              onRemove={handleRemoveFile}
-              onClearAll={handleClearAllFiles}
-            />
           </div>
 
-          {/* Right Column - Collapsible Controls */}
-          <div className="space-y-4 relative overflow-visible">
-            
-            {/* Voice Settings Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300 overflow-visible">
-              {/* Header - Always visible */}
-              <button
-                onClick={() => setVoiceExpanded(!voiceExpanded)}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Voice Settings
-                  </h3>
-                </div>
-                
-                <div className="text-gray-400 dark:text-gray-500">
-                  {voiceExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </div>
-              </button>
-
-              {/* Content - Expandable */}
-              {voiceExpanded && (
-                <div className="px-4 pb-4 overflow-visible">
-                  <VoiceSettings
-                    selectedVoice={selectedVoice}
-                    setSelectedVoice={setSelectedVoice}
-                    voiceStyle={voiceStyle}
-                    setVoiceStyle={setVoiceStyle}
-                  />
-                </div>
-              )}
+          {/* Right Column - Tabbed Panel (40% width) */}
+          <div className="flex-[0_0_40%] flex flex-col">
+            {/* Tab Navigation */}
+            <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-gray-200 dark:border-gray-700 border-b-0">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium rounded-tl-lg transition-colors ${
+                    activeTab === 'settings'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-b-2 border-blue-500'
+                      : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium rounded-tr-lg transition-colors ${
+                    activeTab === 'history'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-b-2 border-blue-500'
+                      : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <History className="w-4 h-4" />
+                    <span>History</span>
+                  </div>
+                </button>
+              </div>
             </div>
 
-            {/* Speech Controls Section */}
-            <CollapsibleSection
-              title="Speech Controls"
-              icon={null}
-              isExpanded={speechExpanded}
-              onToggle={() => setSpeechExpanded(!speechExpanded)}
-              badge=""
-            >
-              <SpeechControlsSection
-                speechRate={speechRate}
-                setSpeechRate={setSpeechRate}
-                pitch={pitch}
-                setPitch={setPitch}
-                volume={volume}
-                setVolume={setVolume}
-              />
-            </CollapsibleSection>
+            {/* Tab Content */}
+            <div className="bg-white dark:bg-gray-800 rounded-b-lg border border-gray-200 dark:border-gray-700 flex-1 overflow-hidden">
+              {activeTab === 'settings' ? (
+                <SettingsTabContent
+                  selectedVoice={selectedVoice}
+                  setSelectedVoice={setSelectedVoice}
+                  voiceStyle={voiceStyle}
+                  setVoiceStyle={setVoiceStyle}
+                  speechRate={speechRate}
+                  setSpeechRate={setSpeechRate}
+                  pitch={pitch}
+                  setPitch={setPitch}
+                  volume={volume}
+                  setVolume={setVolume}
+                />
+              ) : (
+                <HistoryTabContent
+                  audioFiles={audioFiles}
+                  currentlyPlaying={currentlyPlaying}
+                  onPlay={handlePlay}
+                  onStop={handleStop}
+                  onDownload={handleDownload}
+                  onRemove={handleRemoveFile}
+                  onClearAll={handleClearAllFiles}
+                />
+              )}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Footer Audio Player */}
+      {showPlayer && playerAudioFile && (
+        <FooterAudioPlayer
+          audioFile={playerAudioFile}
+          onPlay={() => handlePlay(playerAudioFile)}
+          onStop={handleStop}
+          onDownload={() => handleDownload(playerAudioFile)}
+          isPlaying={currentlyPlaying === playerAudioFile.id}
+          isMinimized={isPlayerMinimized}
+          onToggleMinimize={() => setIsPlayerMinimized(!isPlayerMinimized)}
+          onClose={() => {
+            handleStop()
+            setShowPlayer(false)
+            setLastPlayedAudio(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Footer Audio Player Component
+const FooterAudioPlayer = ({
+  audioFile,
+  onPlay,
+  onStop,
+  onDownload,
+  isPlaying,
+  isMinimized,
+  onToggleMinimize,
+  onClose
+}: {
+  audioFile: any
+  onPlay: () => void
+  onStop: () => void
+  onDownload: () => void
+  isPlaying: boolean
+  isMinimized: boolean
+  onToggleMinimize: () => void
+  onClose: () => void
+}) => {
+  const [currentTime, setCurrentTime] = useState(6) // Current time in seconds
+  const [duration, setDuration] = useState(48) // Total duration in seconds
+  const [isDragging, setIsDragging] = useState(false)
+
+  // Format time from seconds to MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Handle timeline click and drag
+  const handleTimelineInteraction = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const percentage = clickX / rect.width
+    const newTime = Math.round(percentage * duration)
+    setCurrentTime(Math.max(0, Math.min(newTime, duration)))
+  }
+
+  // Handle mouse down on timeline
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true)
+    handleTimelineInteraction(e)
+  }
+
+  // Handle mouse move while dragging
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      const timeline = document.getElementById('audio-timeline')
+      if (timeline) {
+        const rect = timeline.getBoundingClientRect()
+        const clickX = e.clientX - rect.left
+        const percentage = clickX / rect.width
+        const newTime = Math.round(percentage * duration)
+        setCurrentTime(Math.max(0, Math.min(newTime, duration)))
+      }
+    }
+  }
+
+  // Handle mouse up
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, duration])
+
+  // Calculate progress percentage
+  const progressPercentage = (currentTime / duration) * 100
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-xl transition-all duration-300 ease-in-out z-50">
+      
+      {/* Minimized View */}
+      {isMinimized ? (
+        <div className="px-6 py-2 flex items-center justify-center relative group">
+          <div
+            onClick={onToggleMinimize}
+            className="w-32 h-1 bg-gray-900 dark:bg-gray-100 rounded-full cursor-pointer transition-all duration-200 group-hover:h-8 group-hover:w-40 group-hover:flex group-hover:items-center group-hover:justify-center group-hover:px-4 group-hover:bg-gray-900 dark:group-hover:bg-gray-100"
+          >
+            <span className="text-white dark:text-gray-900 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Expand audio player
+            </span>
+          </div>
+        </div>
+      ) : (
+        /* Expanded View */
+        <div className="px-6 py-4">
+          
+          {/* Top Row: Info, Controls, Actions */}
+          <div className="flex items-center justify-between mb-3">
+            
+            {/* Left: Audio Info */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {audioFile.name.replace(/^(Preview_|Full_)/, '')}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {audioFile.isPreview ? 'Preview' : 'Aria'} • Created {audioFile.timestamp.split(',')[0]}
+                </p>
+              </div>
+            </div>
+
+            {/* Center: Playback Controls */}
+            <div className="flex items-center space-x-4">
+              {/* Skip Back */}
+              <button 
+                onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                <SkipBack className="w-5 h-5" />
+              </button>
+              
+              {/* Play/Pause Button */}
+              {isPlaying ? (
+                <button
+                  onClick={onStop}
+                  className="p-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                >
+                  <Pause className="w-6 h-6" />
+                </button>
+              ) : (
+                <button
+                  onClick={onPlay}
+                  className="p-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                >
+                  <Play className="w-6 h-6" />
+                </button>
+              )}
+              
+              {/* Skip Forward */}
+              <button 
+                onClick={() => setCurrentTime(Math.min(duration, currentTime + 10))}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                <SkipForward className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Right: Action Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={onDownload}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              
+              <button
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                title="Share"
+              >
+                <Share className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={onToggleMinimize}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                title="Minimize"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Row: Interactive Timeline */}
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-mono w-12">
+              {formatTime(currentTime)}
+            </span>
+            
+            <div 
+              id="audio-timeline"
+              className="flex-1 bg-gray-300 dark:bg-gray-600 rounded-full h-1.5 cursor-pointer relative"
+              onMouseDown={handleMouseDown}
+              onClick={handleTimelineInteraction}
+            >
+              <div 
+                className="bg-gray-900 dark:bg-gray-100 h-1.5 rounded-full transition-all duration-150 relative"
+                style={{ width: `${progressPercentage}%` }}
+              >
+                {/* Draggable thumb */}
+                <div 
+                  className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 dark:bg-gray-100 rounded-full cursor-grab active:cursor-grabbing shadow-sm"
+                  style={{ 
+                    opacity: isDragging ? 1 : 0,
+                    transition: 'opacity 0.2s ease'
+                  }}
+                />
+              </div>
+            </div>
+            
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-mono w-12">
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Legacy Audio Player Component - REMOVED (using footer player now)
+
+// Settings Tab Content
+const SettingsTabContent = ({
+  selectedVoice,
+  setSelectedVoice,
+  voiceStyle,
+  setVoiceStyle,
+  speechRate,
+  setSpeechRate,
+  pitch,
+  setPitch,
+  volume,
+  setVolume
+}: {
+  selectedVoice: string
+  setSelectedVoice: (voice: string) => void
+  voiceStyle: string
+  setVoiceStyle: (style: string) => void
+  speechRate: number
+  setSpeechRate: (value: number) => void
+  pitch: number
+  setPitch: (value: number) => void
+  volume: number
+  setVolume: (value: number) => void
+}) => {
+  const [voiceExpanded, setVoiceExpanded] = useState(true)
+  const [speechExpanded, setSpeechExpanded] = useState(false)
+
+  return (
+    <div className="p-4 space-y-4 h-full overflow-y-auto">
+      {/* Voice Settings Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+        <button
+          onClick={() => setVoiceExpanded(!voiceExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
+        >
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Voice Settings
+          </h3>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${voiceExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        {voiceExpanded && (
+          <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+            <VoiceSettings
+              selectedVoice={selectedVoice}
+              setSelectedVoice={setSelectedVoice}
+              voiceStyle={voiceStyle}
+              setVoiceStyle={setVoiceStyle}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Speech Controls Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+        <button
+          onClick={() => setSpeechExpanded(!speechExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
+        >
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Speech Controls
+          </h3>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${speechExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        {speechExpanded && (
+          <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+            <SpeechControlsSection
+              speechRate={speechRate}
+              setSpeechRate={setSpeechRate}
+              pitch={pitch}
+              setPitch={setPitch}
+              volume={volume}
+              setVolume={setVolume}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
 }
+
+// History Tab Content
+const HistoryTabContent = ({
+  audioFiles,
+  currentlyPlaying,
+  onPlay,
+  onStop,
+  onDownload,
+  onRemove,
+  onClearAll
+}: {
+  audioFiles: any[]
+  currentlyPlaying: string | null
+  onPlay: (file: any) => void
+  onStop: () => void
+  onDownload: (file: any) => void
+  onRemove: (id: string) => void
+  onClearAll: () => void
+}) => (
+  <div className="p-4 h-full overflow-y-auto">
+    <AudioFileManager
+      audioFiles={audioFiles}
+      currentlyPlaying={currentlyPlaying}
+      onPlay={onPlay}
+      onStop={onStop}
+      onDownload={onDownload}
+      onRemove={onRemove}
+      onClearAll={onClearAll}
+    />
+  </div>
+)
 
 // Error Banner Component
 const ErrorBanner = ({ 
@@ -157,7 +547,7 @@ const ErrorBanner = ({
   error: string
   onDismiss: () => void 
 }) => (
-  <div className="max-w-6xl mx-auto px-4 py-4">
+  <div className="px-6 py-4">
     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
@@ -175,66 +565,10 @@ const ErrorBanner = ({
   </div>
 )
 
-// Collapsible Section Component
-const CollapsibleSection = ({ 
-  title, 
-  icon, 
-  isExpanded, 
-  onToggle, 
-  children,
-  badge
-}: {
-  title: string
-  icon: React.ReactNode
-  isExpanded: boolean
-  onToggle: () => void
-  children: React.ReactNode
-  badge?: string
-}) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-    {/* Header - Always visible */}
-    <button
-      onClick={onToggle}
-      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-    >
-      <div className="flex items-center space-x-2">
-        {icon && (
-          <div className="text-gray-600 dark:text-gray-400">
-            {icon}
-          </div>
-        )}
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          {title}
-        </h3>
-        {badge && badge !== "" && (
-          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
-            {badge}
-          </span>
-        )}
-      </div>
-      
-      <div className="text-gray-400 dark:text-gray-500">
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4" />
-        ) : (
-          <ChevronRight className="w-4 h-4" />
-        )}
-      </div>
-    </button>
-
-    {/* Content - Expandable */}
-    {isExpanded && (
-      <div className="px-4 pb-4">
-        {children}
-      </div>
-    )}
-  </div>
-)
-
 // Header Component
 const Header = () => (
   <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
-    <div className="max-w-6xl mx-auto px-4 py-3">
+    <div className="px-6 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="w-7 h-7 bg-black dark:bg-white rounded-md flex items-center justify-center">
@@ -245,7 +579,6 @@ const Header = () => (
           </h1>
         </div>
         
-        {/* Theme Toggle */}
         <ThemeToggle />
       </div>
     </div>
@@ -254,7 +587,7 @@ const Header = () => (
 
 // How It Works Section Component
 const HowItWorksSection = ({ onClose }: { onClose: () => void }) => (
-  <div className="max-w-6xl mx-auto px-4 py-4">
+  <div className="px-6 py-4">
     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800 relative">
       <button
         onClick={onClose}
@@ -318,7 +651,7 @@ const HowItWorksStep = ({
   </div>
 )
 
-// Text Input Section Component - Fixed type annotation
+// Text Input Section Component
 interface TextStats {
   charCount: number
   isValid: boolean
@@ -344,14 +677,15 @@ const TextInputSection = ({
   handleGenerate: (isPreview?: boolean) => void
   resetForm: () => void
 }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-    <div className="relative">
+  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300 flex flex-col h-full">
+    <div className="relative flex-1 flex flex-col">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Type or paste your text here..."
-        className="w-full h-80 p-3 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+        placeholder="Start typing here or paste any text you want to turn into lifelike speech..."
+        className="w-full flex-1 p-3 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
         maxLength={5000}
+        style={{ minHeight: '300px' }}
       />
       
       {/* Reset button - top right corner */}
@@ -384,7 +718,7 @@ const TextInputSection = ({
             disabled={isGenerating || !textStats.isValid || !selectedVoice}
             variant="primary"
             icon={<Download className="w-3 h-3 mr-1" />}
-            text={isGenerating ? 'Generating...' : 'Regenerate speech'}
+            text={isGenerating ? 'Generating...' : 'Generate'}
           />
         </div>
       </div>
@@ -499,18 +833,15 @@ const SliderControl = ({
 
   return (
     <div>
-      {/* Main label on top */}
       <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
         {label}
       </label>
       
-      {/* Left and right labels above slider */}
       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>
       
-      {/* Slider */}
       <div className="relative">
         <input
           type="range"
