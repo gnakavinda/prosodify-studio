@@ -1,11 +1,11 @@
 'use client'
 
-import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, ChevronRight, AlertCircle, Pause, SkipBack, SkipForward, Share, Settings, History, Minimize2, Maximize2 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, AlertCircle, Pause, SkipBack, SkipForward, Share, Settings, History, Minimize2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
 import ThemeToggle from './components/ThemeToggle'
-import { useTextToSpeechLogic } from './TextToSpeechLogic'
+import { useTextToSpeechLogic, AudioFile } from './TextToSpeechLogic'
 
 export default function TextToSpeechUI() {
   const {
@@ -44,7 +44,7 @@ export default function TextToSpeechUI() {
   // State for footer audio player  
   const [showPlayer, setShowPlayer] = useState(false)
   const [isPlayerMinimized, setIsPlayerMinimized] = useState(false)
-  const [lastPlayedAudio, setLastPlayedAudio] = useState<any>(null)
+  const [lastPlayedAudio, setLastPlayedAudio] = useState<AudioFile | null>(null)
 
   // Get text statistics
   const textStats = getTextStats()
@@ -200,6 +200,17 @@ export default function TextToSpeechUI() {
 }
 
 // Footer Audio Player Component
+interface FooterAudioPlayerProps {
+  audioFile: AudioFile
+  onPlay: () => void
+  onStop: () => void
+  onDownload: () => void
+  isPlaying: boolean
+  isMinimized: boolean
+  onToggleMinimize: () => void
+  onClose: () => void
+}
+
 const FooterAudioPlayer = ({
   audioFile,
   onPlay,
@@ -209,18 +220,9 @@ const FooterAudioPlayer = ({
   isMinimized,
   onToggleMinimize,
   onClose
-}: {
-  audioFile: any
-  onPlay: () => void
-  onStop: () => void
-  onDownload: () => void
-  isPlaying: boolean
-  isMinimized: boolean
-  onToggleMinimize: () => void
-  onClose: () => void
-}) => {
+}: FooterAudioPlayerProps) => {
   const [currentTime, setCurrentTime] = useState(6) // Current time in seconds
-  const [duration, setDuration] = useState(48) // Total duration in seconds
+  const [duration] = useState(48) // Total duration in seconds
   const [isDragging, setIsDragging] = useState(false)
 
   // Format time from seconds to MM:SS
@@ -246,7 +248,7 @@ const FooterAudioPlayer = ({
   }
 
   // Handle mouse move while dragging
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
       const timeline = document.getElementById('audio-timeline')
       if (timeline) {
@@ -257,12 +259,12 @@ const FooterAudioPlayer = ({
         setCurrentTime(Math.max(0, Math.min(newTime, duration)))
       }
     }
-  }
+  }, [isDragging, duration])
 
   // Handle mouse up
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false)
-  }
+  }, [])
 
   // Add global mouse event listeners for dragging
   useEffect(() => {
@@ -274,7 +276,7 @@ const FooterAudioPlayer = ({
         document.removeEventListener('mouseup', handleMouseUp)
       }
     }
-  }, [isDragging, duration])
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   // Calculate progress percentage
   const progressPercentage = (currentTime / duration) * 100
@@ -424,9 +426,20 @@ const FooterAudioPlayer = ({
   )
 }
 
-// Legacy Audio Player Component - REMOVED (using footer player now)
-
 // Settings Tab Content
+interface SettingsTabContentProps {
+  selectedVoice: string
+  setSelectedVoice: (voice: string) => void
+  voiceStyle: string
+  setVoiceStyle: (style: string) => void
+  speechRate: number
+  setSpeechRate: (value: number) => void
+  pitch: number
+  setPitch: (value: number) => void
+  volume: number
+  setVolume: (value: number) => void
+}
+
 const SettingsTabContent = ({
   selectedVoice,
   setSelectedVoice,
@@ -438,18 +451,7 @@ const SettingsTabContent = ({
   setPitch,
   volume,
   setVolume
-}: {
-  selectedVoice: string
-  setSelectedVoice: (voice: string) => void
-  voiceStyle: string
-  setVoiceStyle: (style: string) => void
-  speechRate: number
-  setSpeechRate: (value: number) => void
-  pitch: number
-  setPitch: (value: number) => void
-  volume: number
-  setVolume: (value: number) => void
-}) => {
+}: SettingsTabContentProps) => {
   const [voiceExpanded, setVoiceExpanded] = useState(true)
   const [speechExpanded, setSpeechExpanded] = useState(false)
 
@@ -509,6 +511,16 @@ const SettingsTabContent = ({
 }
 
 // History Tab Content
+interface HistoryTabContentProps {
+  audioFiles: AudioFile[]
+  currentlyPlaying: string | null
+  onPlay: (file: AudioFile) => void
+  onStop: () => void
+  onDownload: (file: AudioFile) => void
+  onRemove: (id: string) => void
+  onClearAll: () => void
+}
+
 const HistoryTabContent = ({
   audioFiles,
   currentlyPlaying,
@@ -517,15 +529,7 @@ const HistoryTabContent = ({
   onDownload,
   onRemove,
   onClearAll
-}: {
-  audioFiles: any[]
-  currentlyPlaying: string | null
-  onPlay: (file: any) => void
-  onStop: () => void
-  onDownload: (file: any) => void
-  onRemove: (id: string) => void
-  onClearAll: () => void
-}) => (
+}: HistoryTabContentProps) => (
   <div className="p-4 h-full overflow-y-auto">
     <AudioFileManager
       audioFiles={audioFiles}
@@ -660,6 +664,16 @@ interface TextStats {
   previewCost: string
 }
 
+interface TextInputSectionProps {
+  text: string
+  setText: (text: string) => void
+  isGenerating: boolean
+  selectedVoice: string
+  textStats: TextStats
+  handleGenerate: (isPreview?: boolean) => void
+  resetForm: () => void
+}
+
 const TextInputSection = ({
   text,
   setText,
@@ -668,15 +682,7 @@ const TextInputSection = ({
   textStats,
   handleGenerate,
   resetForm
-}: {
-  text: string
-  setText: (text: string) => void
-  isGenerating: boolean
-  selectedVoice: string
-  textStats: TextStats
-  handleGenerate: (isPreview?: boolean) => void
-  resetForm: () => void
-}) => (
+}: TextInputSectionProps) => (
   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300 flex flex-col h-full">
     <div className="relative flex-1 flex flex-col">
       <textarea
@@ -727,19 +733,21 @@ const TextInputSection = ({
 )
 
 // Action Button Component
+interface ActionButtonProps {
+  onClick: () => void
+  disabled: boolean
+  variant: 'primary' | 'secondary'
+  icon: React.ReactNode
+  text: string
+}
+
 const ActionButton = ({
   onClick,
   disabled,
   variant,
   icon,
   text
-}: {
-  onClick: () => void
-  disabled: boolean
-  variant: 'primary' | 'secondary'
-  icon: React.ReactNode
-  text: string
-}) => {
+}: ActionButtonProps) => {
   const baseClasses = "flex items-center px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
   const variantClasses = variant === 'primary' 
     ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100"
@@ -758,6 +766,15 @@ const ActionButton = ({
 }
 
 // Speech Controls Section Component
+interface SpeechControlsSectionProps {
+  speechRate: number
+  setSpeechRate: (value: number) => void
+  pitch: number
+  setPitch: (value: number) => void
+  volume: number
+  setVolume: (value: number) => void
+}
+
 const SpeechControlsSection = ({
   speechRate,
   setSpeechRate,
@@ -765,14 +782,7 @@ const SpeechControlsSection = ({
   setPitch,
   volume,
   setVolume
-}: {
-  speechRate: number
-  setSpeechRate: (value: number) => void
-  pitch: number
-  setPitch: (value: number) => void
-  volume: number
-  setVolume: (value: number) => void
-}) => (
+}: SpeechControlsSectionProps) => (
   <div className="space-y-4">
     <SliderControl
       label="Speech Rate"
@@ -810,6 +820,17 @@ const SpeechControlsSection = ({
 )
 
 // Slider Control Component
+interface SliderControlProps {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  min: number
+  max: number
+  step: number
+  leftLabel: string
+  rightLabel: string
+}
+
 const SliderControl = ({
   label,
   value,
@@ -819,16 +840,7 @@ const SliderControl = ({
   step,
   leftLabel,
   rightLabel
-}: {
-  label: string
-  value: number
-  onChange: (value: number) => void
-  min: number
-  max: number
-  step: number
-  leftLabel: string
-  rightLabel: string
-}) => {
+}: SliderControlProps) => {
   const percentage = ((value - min) / (max - min)) * 100
 
   return (
