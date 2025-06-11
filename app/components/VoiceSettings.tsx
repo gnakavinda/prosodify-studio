@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Loader, AlertCircle, ChevronDown, Search, X } from 'lucide-react'
 
 interface Voice {
@@ -179,6 +179,26 @@ export default function VoiceSettings({
   const [selectedLanguage, setSelectedLanguage] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
 
+  // Get available styles for selected voice - memoized with useCallback
+  const getAvailableStyles = useCallback(() => {
+    if (!selectedVoice || voices.length === 0) return ['default']
+    
+    const voice = voices.find(v => v.shortName === selectedVoice)
+    const styles = voice?.styles || []
+    
+    if (styles.length === 0) return ['default']
+    return styles
+  }, [selectedVoice, voices])
+
+  // Update style when voice changes
+  useEffect(() => {
+    const availableStyles = getAvailableStyles()
+    if (availableStyles.length > 0 && !availableStyles.includes(voiceStyle)) {
+      const newStyle = availableStyles[0]
+      setVoiceStyle(newStyle)
+    }
+  }, [selectedVoice, voiceStyle, setVoiceStyle, getAvailableStyles])
+
   // Fetch voices from Azure
   useEffect(() => {
     const fetchVoices = async () => {
@@ -218,26 +238,6 @@ export default function VoiceSettings({
 
     fetchVoices()
   }, [selectedVoice, setSelectedVoice])
-
-  // Get available styles for selected voice
-  const getAvailableStyles = () => {
-    if (!selectedVoice || voices.length === 0) return ['default']
-    
-    const voice = voices.find(v => v.shortName === selectedVoice)
-    const styles = voice?.styles || []
-    
-    if (styles.length === 0) return ['default']
-    return styles
-  }
-
-  // Update style when voice changes
-  useEffect(() => {
-    const availableStyles = getAvailableStyles()
-    if (availableStyles.length > 0 && !availableStyles.includes(voiceStyle)) {
-      const newStyle = availableStyles[0]
-      setVoiceStyle(newStyle)
-    }
-  }, [selectedVoice, voiceStyle, setVoiceStyle, voices])
 
   // Filter voices based on language and gender
   const getFilteredVoices = () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, ChevronRight, Settings, Sliders, AlertCircle } from 'lucide-react'
+import { Play, Download, Volume2, X, Info, Mic, FileText, Headphones, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import VoiceSettings from './components/VoiceSettings'
 import AudioFileManager from './components/AudioFileManager'
@@ -318,7 +318,15 @@ const HowItWorksStep = ({
   </div>
 )
 
-// Text Input Section Component
+// Text Input Section Component - Fixed type annotation
+interface TextStats {
+  charCount: number
+  isValid: boolean
+  previewLength: number
+  cost: string
+  previewCost: string
+}
+
 const TextInputSection = ({
   text,
   setText,
@@ -332,7 +340,7 @@ const TextInputSection = ({
   setText: (text: string) => void
   isGenerating: boolean
   selectedVoice: string
-  textStats: any
+  textStats: TextStats
   handleGenerate: (isPreview?: boolean) => void
   resetForm: () => void
 }) => (
