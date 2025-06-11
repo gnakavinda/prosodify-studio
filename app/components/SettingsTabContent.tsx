@@ -1,0 +1,89 @@
+import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
+import VoiceSettings from './VoiceSettings'
+import SpeechControlsSection from './SpeechControlsSection'
+
+interface SettingsTabContentProps {
+  selectedVoice: string
+  setSelectedVoice: (voice: string) => void
+  voiceStyle: string
+  setVoiceStyle: (style: string) => void
+  speechRate: number
+  setSpeechRate: (value: number) => void
+  pitch: number
+  setPitch: (value: number) => void
+  volume: number
+  setVolume: (value: number) => void
+}
+
+const SettingsTabContent = ({
+  selectedVoice,
+  setSelectedVoice,
+  voiceStyle,
+  setVoiceStyle,
+  speechRate,
+  setSpeechRate,
+  pitch,
+  setPitch,
+  volume,
+  setVolume
+}: SettingsTabContentProps) => {
+  const [voiceExpanded, setVoiceExpanded] = useState(true)
+  const [speechExpanded, setSpeechExpanded] = useState(false)
+
+  return (
+    <div className="p-4 space-y-4 h-full overflow-y-auto">
+      {/* Voice Settings Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+        <button
+          onClick={() => setVoiceExpanded(!voiceExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
+        >
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Voice Settings
+          </h3>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${voiceExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        {voiceExpanded && (
+          <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+            <VoiceSettings
+              selectedVoice={selectedVoice}
+              setSelectedVoice={setSelectedVoice}
+              voiceStyle={voiceStyle}
+              setVoiceStyle={setVoiceStyle}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Speech Controls Section */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+        <button
+          onClick={() => setSpeechExpanded(!speechExpanded)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
+        >
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Speech Controls
+          </h3>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${speechExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        {speechExpanded && (
+          <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+            <SpeechControlsSection
+              speechRate={speechRate}
+              setSpeechRate={setSpeechRate}
+              pitch={pitch}
+              setPitch={setPitch}
+              volume={volume}
+              setVolume={setVolume}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default SettingsTabContent
