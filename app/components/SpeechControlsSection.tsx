@@ -74,11 +74,26 @@ const SliderControl = ({
 }: SliderControlProps) => {
   const percentage = ((value - min) / (max - min)) * 100
 
+  // Format value for display
+  const formatValue = (val: number) => {
+    if (label === 'Speech Rate') {
+      if (val < 1) return `${val}x (${leftLabel})`
+      if (val > 1) return `${val}x (${rightLabel})`
+      return `${val}x (Normal)`
+    }
+    return `${val}x`
+  }
+
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
-        {label}
-      </label>
+      <div className="flex items-center justify-between mb-3">
+        <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          {label}
+        </label>
+        <span className="text-sm font-medium text-black dark:text-white bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+          {formatValue(value)}
+        </span>
+      </div>
       
       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
         <span>{leftLabel}</span>

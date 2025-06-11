@@ -34,7 +34,7 @@ const SettingsTabContent = ({
   return (
     <div className="p-4 space-y-4 h-full overflow-y-auto">
       {/* Voice Settings Section */}
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         <button
           onClick={() => setVoiceExpanded(!voiceExpanded)}
           className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
@@ -42,10 +42,16 @@ const SettingsTabContent = ({
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             Voice Settings
           </h3>
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${voiceExpanded ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ease-in-out ${voiceExpanded ? 'rotate-180' : ''}`} />
         </button>
 
-        {voiceExpanded && (
+        <div 
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${
+            voiceExpanded 
+              ? 'max-h-96 opacity-100' 
+              : 'max-h-0 opacity-0'
+          }`}
+        >
           <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
             <VoiceSettings
               selectedVoice={selectedVoice}
@@ -54,11 +60,11 @@ const SettingsTabContent = ({
               setVoiceStyle={setVoiceStyle}
             />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Speech Controls Section */}
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         <button
           onClick={() => setSpeechExpanded(!speechExpanded)}
           className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
@@ -66,10 +72,16 @@ const SettingsTabContent = ({
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             Speech Controls
           </h3>
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${speechExpanded ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ease-in-out ${speechExpanded ? 'rotate-180' : ''}`} />
         </button>
 
-        {speechExpanded && (
+        <div 
+          className={`transition-all duration-300 ease-in-out overflow-hidden ${
+            speechExpanded 
+              ? 'max-h-80 opacity-100' 
+              : 'max-h-0 opacity-0'
+          }`}
+        >
           <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
             <SpeechControlsSection
               speechRate={speechRate}
@@ -80,7 +92,7 @@ const SettingsTabContent = ({
               setVolume={setVolume}
             />
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

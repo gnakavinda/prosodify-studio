@@ -26,6 +26,10 @@ export function useTextToSpeechLogic() {
   const [showHowItWorks, setShowHowItWorks] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Audio state for footer player
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+
   // Audio reference for playback
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -120,6 +124,8 @@ export function useTextToSpeechLogic() {
     audio.onended = () => {
       setCurrentlyPlaying(null)
       audioRef.current = null
+      setAudioCurrentTime(0)
+      setAudioDuration(0)
     }
 
     audio.onerror = () => {
@@ -127,6 +133,22 @@ export function useTextToSpeechLogic() {
       setCurrentlyPlaying(null)
       audioRef.current = null
       setError('Error playing audio. The file may be corrupted.')
+      setAudioCurrentTime(0)
+      setAudioDuration(0)
+    }
+
+    // Audio time tracking
+    audio.ontimeupdate = () => {
+      setAudioCurrentTime(audio.currentTime || 0)
+    }
+
+    audio.onloadedmetadata = () => {
+      setAudioDuration(audio.duration || 0)
+    }
+
+    audio.onloadstart = () => {
+      setAudioCurrentTime(0)
+      setAudioDuration(0)
     }
 
     // Start playback
@@ -135,6 +157,8 @@ export function useTextToSpeechLogic() {
       setCurrentlyPlaying(null)
       audioRef.current = null
       setError('Could not play audio. Please try again.')
+      setAudioCurrentTime(0)
+      setAudioDuration(0)
     })
   }
 
@@ -146,6 +170,15 @@ export function useTextToSpeechLogic() {
       audioRef.current = null
     }
     setCurrentlyPlaying(null)
+    setAudioCurrentTime(0)
+  }
+
+  // Seek to specific time in audio
+  const handleSeek = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time
+      setAudioCurrentTime(time)
+    }
   }
 
   // Download audio file
@@ -250,10 +283,15 @@ export function useTextToSpeechLogic() {
     setShowHowItWorks,
     error,
 
+    // Audio state for footer player
+    audioCurrentTime,
+    audioDuration,
+
     // Actions
     handleGenerate,
     handlePlay,
     handleStop,
+    handleSeek,
     handleDownload,
     handleRemoveFile,
     handleClearAllFiles,

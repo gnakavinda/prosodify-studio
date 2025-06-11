@@ -33,9 +33,12 @@ export default function TextToSpeechUI() {
     showHowItWorks,
     setShowHowItWorks,
     error,
+    audioCurrentTime,
+    audioDuration,
     handleGenerate,
     handlePlay,
     handleStop,
+    handleSeek,
     handleDownload,
     handleRemoveFile,
     handleClearAllFiles,
@@ -112,6 +115,10 @@ export default function TextToSpeechUI() {
               setText={setText}
               isGenerating={isGenerating}
               selectedVoice={selectedVoice}
+              voiceStyle={voiceStyle}
+              speechRate={speechRate}
+              pitch={pitch}
+              volume={volume}
               textStats={textStats}
               handleGenerate={handleGenerate}
               resetForm={resetForm}
@@ -198,6 +205,9 @@ export default function TextToSpeechUI() {
             setShowPlayer(false)
             setLastPlayedAudio(null)
           }}
+          currentTime={audioCurrentTime}
+          duration={audioDuration}
+          onSeek={handleSeek}
         />
       )}
     </div>

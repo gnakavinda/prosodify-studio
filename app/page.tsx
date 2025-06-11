@@ -1,5 +1,10 @@
-import TextToSpeechUI from './TextToSpeechUI'  // ✅ No extension needed
+import AppInitializer from './components/AppInitializer'
+import TextToSpeechUI from './TextToSpeechUI'
 
-export default function Home() {
-  return <TextToSpeechUI />
+export default function App() {
+  return (
+    <AppInitializer>
+      <TextToSpeechUI />
+    </AppInitializer>
+  )
 }
