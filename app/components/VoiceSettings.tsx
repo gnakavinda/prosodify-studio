@@ -53,7 +53,7 @@ const getLanguageName = (langCode: string): string => {
     // Last resort: manual formatting of common patterns
     return formatLanguageCodeManually(langCode)
     
-  } catch (error) {
+  } catch {
     // Fallback if Intl API fails
     return formatLanguageCodeManually(langCode)
   }
