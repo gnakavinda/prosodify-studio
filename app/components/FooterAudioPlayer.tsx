@@ -32,8 +32,28 @@ const FooterAudioPlayer = ({
   const [isDragging, setIsDragging] = useState(false)
   const [dragTime, setDragTime] = useState(0)
 
+  // Handle mouse move while dragging
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging && duration && onSeek) {
+      const timeline = document.getElementById('audio-timeline')
+      if (timeline) {
+        const rect = timeline.getBoundingClientRect()
+        const clickX = e.clientX - rect.left
+        const percentage = Math.max(0, Math.min(1, clickX / rect.width))
+        const newTime = percentage * duration
+        
+        setDragTime(newTime)
+        onSeek(newTime)
+      }
+    }
+  }, [isDragging, duration, onSeek])
+
+  // Handle mouse up
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
   // Add global mouse event listeners for dragging
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)
@@ -43,7 +63,7 @@ const FooterAudioPlayer = ({
         document.removeEventListener('mouseup', handleMouseUp)
       }
     }
-  }, [isDragging])
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   // Format time from seconds to MM:SS
   const formatTime = (seconds: number) => {
@@ -79,27 +99,6 @@ const FooterAudioPlayer = ({
     setDragTime(newTime)
     onSeek(newTime)
   }
-
-  // Handle mouse move while dragging
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging && duration && onSeek) {
-      const timeline = document.getElementById('audio-timeline')
-      if (timeline) {
-        const rect = timeline.getBoundingClientRect()
-        const clickX = e.clientX - rect.left
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width))
-        const newTime = percentage * duration
-        
-        setDragTime(newTime)
-        onSeek(newTime)
-      }
-    }
-  }, [isDragging, duration, onSeek])
-
-  // Handle mouse up
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-  }, [])
 
   // Skip functions
   const handleSkipBack = () => {
