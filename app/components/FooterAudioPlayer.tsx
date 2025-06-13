@@ -33,6 +33,7 @@ const FooterAudioPlayer = ({
   const [dragTime, setDragTime] = useState(0)
 
   // Add global mouse event listeners for dragging
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)

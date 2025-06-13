@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Loader2, AlertCircle, Volume2 } from 'lucide-react'
+import { Search, Loader2, Volume2 } from 'lucide-react'
 import { useVoiceCache } from '../hooks/useVoiceCache'
 import type { Voice } from '../services/voiceCache'
 
@@ -238,30 +238,6 @@ const VoiceSettings = ({
       setIsVoiceListExpanded(false)
     }
   }, [selectedVoice, selectedVoiceDetails])
-
-  // Error state
-  if (false) { // Removed error handling since error is not used
-    return (
-      <div className="space-y-4">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-red-800 dark:text-red-200 text-xs">
-                Failed to load voices
-              </p>
-              <button
-                onClick={refreshVoices}
-                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xs underline mt-1"
-              >
-                Try again
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4">

@@ -16,7 +16,7 @@ export interface Voice {
   Lang?: string
   sex?: string
   Sex?: string
-  [key: string]: any // Allow additional properties from API
+  [key: string]: unknown // Allow additional properties from API
 }
 
 export interface CacheData {
