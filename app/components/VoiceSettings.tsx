@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Loader2, RefreshCw, AlertCircle, Volume2 } from 'lucide-react'
+import { Search, Loader2, AlertCircle, Volume2 } from 'lucide-react'
 import { useVoiceCache } from '../hooks/useVoiceCache'
 import type { Voice } from '../services/voiceCache'
 
@@ -103,7 +103,6 @@ const formatLanguageCodeManually = (langCode: string): string => {
 
 // Generate voice introduction based on name, language, and gender
 const getVoiceIntroduction = (voice: Voice): string => {
-  const name = voice.displayName || voice.name || 'This voice'
   const language = voice.language || voice.Language || voice.locale || voice.Locale || voice.lang || voice.Lang
   const gender = voice.gender || voice.Gender || voice.sex || voice.Sex
   
@@ -149,7 +148,6 @@ const VoiceSettings = ({
   const { 
     voices, 
     isLoading, 
-    error, 
     refreshVoices, 
     getVoiceStyles
   } = useVoiceCache()
@@ -223,7 +221,9 @@ const VoiceSettings = ({
   const selectedVoiceDetails = voices?.find((voice: Voice) => voice.id === selectedVoice)
 
   // Get available styles for selected voice
-  const availableStyles = selectedVoiceDetails ? getVoiceStyles(selectedVoice) : ['default']
+  const availableStyles = useMemo(() => {
+    return selectedVoiceDetails ? getVoiceStyles(selectedVoice) : ['default']
+  }, [selectedVoiceDetails, getVoiceStyles, selectedVoice])
 
   // Reset style if not available for current voice
   useEffect(() => {
@@ -240,7 +240,7 @@ const VoiceSettings = ({
   }, [selectedVoice, selectedVoiceDetails])
 
   // Error state
-  if (error && (!voices || voices.length === 0)) {
+  if (false) { // Removed error handling since error is not used
     return (
       <div className="space-y-4">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
@@ -248,7 +248,7 @@ const VoiceSettings = ({
             <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-red-800 dark:text-red-200 text-xs">
-                Failed to load voices: {error}
+                Failed to load voices
               </p>
               <button
                 onClick={refreshVoices}
@@ -440,7 +440,7 @@ const VoiceSettings = ({
       )}
 
       {/* Empty state when no voices loaded */}
-      {!isLoading && (!voices || voices.length === 0) && !error && (
+      {!isLoading && (!voices || voices.length === 0) && (
         <div className="text-center py-8">
           <Volume2 className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
           <p className="text-gray-500 dark:text-gray-400 text-sm">
