@@ -2,12 +2,21 @@
 export interface Voice {
   id: string
   name: string
-  language: string
-  gender: string
-  locale: string
+  language?: string
+  gender?: string
+  locale?: string
   styles?: string[]
   shortName?: string
   displayName?: string
+  // Allow for different field name variations from API
+  Language?: string
+  Gender?: string
+  Locale?: string
+  lang?: string
+  Lang?: string
+  sex?: string
+  Sex?: string
+  [key: string]: any // Allow additional properties from API
 }
 
 export interface CacheData {
