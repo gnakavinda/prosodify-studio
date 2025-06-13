@@ -106,7 +106,7 @@ export default function TextToSpeechUI() {
 
       {/* Main Content - Full Width Layout */}
       <div className="px-6 py-6">
-        <div className="flex gap-6 h-[calc(100vh-140px)]">
+        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
           
           {/* Left Column - Text Input (60% width) */}
           <div className="flex-[0_0_60%] flex flex-col">
