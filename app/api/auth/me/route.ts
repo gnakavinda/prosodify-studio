@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { findUserById } from '../../../lib/database'
 
+interface JWTPayload {
+  userId: string
+  email: string
+  iat?: number
+  exp?: number
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -15,10 +22,10 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.split(' ')[1]
     
-    let decoded: any
+    let decoded: JWTPayload
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (jwtError) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
+    } catch {
       return NextResponse.json(
         { message: 'Invalid or expired token' },
         { status: 401 }
