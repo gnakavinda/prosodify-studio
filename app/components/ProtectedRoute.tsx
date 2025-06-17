@@ -1,44 +1,36 @@
 'use client'
 
-import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react'
 import AuthModal from './AuthModal'
-import { Loader, Lock } from 'lucide-react'
 
-interface ProtectedRouteProps {
-  children: React.ReactNode
-  fallback?: React.ReactNode
-}
-
-export default function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
+  // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto mb-4 text-blue-600" size={48} />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    if (fallback) {
-      return <>{fallback}</>
-    }
-
+  // If not authenticated, show sign-in prompt
+  if (!user) {
     return (
-      <>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-          <div className="text-center p-8">
-            <div className="bg-white rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Lock className="text-blue-600" size={40} />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">P</span>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Authentication Required
+              Welcome to Prosodify Studio
             </h1>
             <p className="text-gray-600 mb-8 max-w-md">
               Please sign in to access Prosodify&apos;s text-to-speech features and track your usage.
@@ -47,7 +39,7 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
               onClick={() => setShowAuthModal(true)}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all"
             >
-              Sign In to Continue
+              Sign In
             </button>
           </div>
         </div>
@@ -56,9 +48,10 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
         />
-      </>
+      </div>
     )
   }
 
+  // If authenticated, show the protected content
   return <>{children}</>
 }
