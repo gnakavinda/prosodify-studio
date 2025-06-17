@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useAuth } from './contexts/AuthContext'
+import { ttsService } from './services/ttsService'
 
 export interface AudioFile {
   id: string
@@ -11,6 +13,8 @@ export interface AudioFile {
 }
 
 export function useTextToSpeechLogic() {
+  const { token, usage, refreshUserData } = useAuth()
+  
   // Core state
   const [text, setText] = useState('')
   const [selectedVoice, setSelectedVoice] = useState('')
@@ -40,6 +44,20 @@ export function useTextToSpeechLogic() {
       return
     }
 
+    if (!token) {
+      setError('Authentication required. Please log in.')
+      return
+    }
+
+    // Check usage limits before generation
+    if (usage && !isPreview) {
+      const charactersNeeded = text.length
+      if (usage.current + charactersNeeded > usage.limit) {
+        setError(`Usage limit exceeded. You need ${charactersNeeded} characters but only have ${usage.remaining} remaining.`)
+        return
+      }
+    }
+
     setIsGenerating(true)
     setError(null)
 
@@ -47,24 +65,20 @@ export function useTextToSpeechLogic() {
       // Use first 200 characters for preview, full text for generation
       const textToUse = isPreview ? text.substring(0, 200) : text
 
-      const response = await fetch('/api/text-to-speech', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: textToUse,
-          voice: selectedVoice,
-          style: voiceStyle,
-          rate: speechRate,
-          pitch: pitch,
-          volume: volume
-        })
-      })
+      // Call your backend API
+      const response = await ttsService.generateSpeech({
+        text: textToUse,
+        voice: selectedVoice,
+        style: voiceStyle !== 'default' ? voiceStyle : undefined,
+        rate: speechRate,
+        pitch: pitch,
+        volume: volume,
+        isPreview: isPreview
+      }, token)
 
-      const data = await response.json()
-
-      if (data.success) {
+      if (response.success && response.audio) {
         // Create audio blob and URL
-        const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { 
+        const audioBlob = new Blob([Uint8Array.from(atob(response.audio), c => c.charCodeAt(0))], { 
           type: 'audio/mpeg' 
         })
         const audioUrl = URL.createObjectURL(audioBlob)
@@ -93,8 +107,18 @@ export function useTextToSpeechLogic() {
           handlePlay(newAudioFile)
         }
 
+        // Refresh usage data after successful generation (only for non-preview)
+        if (!isPreview && response.usage) {
+          refreshUserData()
+        }
+
       } else {
-        setError(data.error || 'Failed to generate speech')
+        // Handle different types of errors
+        if (response.error) {
+          setError(response.error)
+        } else {
+          setError('Failed to generate speech')
+        }
       }
     } catch (error) {
       console.error('Generation error:', error)
@@ -227,9 +251,10 @@ export function useTextToSpeechLogic() {
     setAudioFiles([])
   }
 
-  // Calculate estimated cost (Azure pricing: ~$15 per 1M characters)
+  // Calculate estimated cost based on real usage
   const getEstimatedCost = (textLength: number) => {
-    return (textLength * 0.000015).toFixed(4)
+    // Azure Neural Voices: $16 per 1M characters
+    return (textLength * 0.000016).toFixed(4)
   }
 
   // Get character count and validation
@@ -238,12 +263,18 @@ export function useTextToSpeechLogic() {
     const isValid = charCount > 0 && charCount <= 5000
     const previewLength = Math.min(charCount, 200)
     
+    // Check if user can generate this text
+    const canGenerate = usage ? (usage.current + charCount) <= usage.limit : true
+    const remaining = usage ? usage.remaining : 0
+    
     return {
       charCount,
       isValid,
       previewLength,
       cost: getEstimatedCost(charCount),
-      previewCost: getEstimatedCost(previewLength)
+      previewCost: getEstimatedCost(previewLength),
+      canGenerate,
+      remaining
     }
   }
 

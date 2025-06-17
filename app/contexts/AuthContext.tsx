@@ -1,115 +1,204 @@
-// contexts/AuthContext.tsx
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User, AuthContextType } from '../types/auth'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
-const AuthContext = createContext<AuthContextType | null>(null)
-
-interface AuthProviderProps {
-  children: ReactNode
+interface User {
+  id: string
+  email: string
+  name: string
+  subscriptionStatus: 'free' | 'pro' | 'premium'
+  monthlyUsage: number
+  usageResetDate: string
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+interface Usage {
+  current: number
+  limit: number
+  remaining: number
+}
 
-  // Check for existing session on mount
+interface AuthContextType {
+  user: User | null
+  usage: Usage | null
+  token: string | null
+  isLoading: boolean
+  isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<boolean>
+  register: (email: string, password: string, name: string) => Promise<boolean>
+  logout: () => void
+  refreshUserData: () => Promise<void>
+  error: string | null
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://prosodify-api-v2.azurewebsites.net'
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [usage, setUsage] = useState<Usage | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const isAuthenticated = !!user && !!token
+
+  // Initialize auth state from localStorage
   useEffect(() => {
-    checkAuthStatus()
+    const storedToken = localStorage.getItem('auth_token')
+    if (storedToken) {
+      setToken(storedToken)
+      verifyToken(storedToken)
+    } else {
+      setIsLoading(false)
+    }
   }, [])
 
-  const checkAuthStatus = async () => {
+  const verifyToken = async (authToken: string) => {
     try {
-      const token = localStorage.getItem('prosodify_token')
-      if (!token) {
-        setIsLoading(false)
-        return
-      }
-
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch(`${API_BASE}/api/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
       })
 
       if (response.ok) {
-        const userData = await response.json()
-        setUser(userData.user)
+        const data = await response.json()
+        setUser(data.user)
+        await getDashboardData(authToken)
       } else {
-        localStorage.removeItem('prosodify_token')
+        localStorage.removeItem('auth_token')
+        setToken(null)
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
-      localStorage.removeItem('prosodify_token')
+      console.error('Token verification failed:', error)
+      localStorage.removeItem('auth_token')
+      setToken(null)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const login = async (email: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    })
+  const getDashboardData = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/user/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Login failed')
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        setUsage(data.usage)
+      }
+    } catch (error) {
+      console.error('Dashboard data fetch failed:', error)
     }
-
-    const data = await response.json()
-    localStorage.setItem('prosodify_token', data.token)
-    setUser(data.user)
   }
 
-  const register = async (email: string, password: string, name: string) => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password, name })
-    })
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true)
+    setError(null)
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Registration failed')
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setToken(data.token)
+        setUser(data.user)
+        localStorage.setItem('auth_token', data.token)
+        await getDashboardData(data.token)
+        return true
+      } else {
+        setError(data.message || 'Login failed')
+        return false
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+      return false
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    const data = await response.json()
-    localStorage.setItem('prosodify_token', data.token)
-    setUser(data.user)
+  const register = async (email: string, password: string, name: string): Promise<boolean> => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setToken(data.token)
+        setUser(data.user)
+        localStorage.setItem('auth_token', data.token)
+        await getDashboardData(data.token)
+        return true
+      } else {
+        setError(data.message || 'Registration failed')
+        return false
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+      return false
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const logout = () => {
-    localStorage.removeItem('prosodify_token')
     setUser(null)
+    setUsage(null)
+    setToken(null)
+    setError(null)
+    localStorage.removeItem('auth_token')
+  }
+
+  const refreshUserData = async () => {
+    if (token) {
+      await getDashboardData(token)
+    }
   }
 
   const value: AuthContextType = {
     user,
+    usage,
+    token,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     login,
     register,
-    logout
+    logout,
+    refreshUserData,
+    error,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Settings, History } from 'lucide-react'
 import { useTextToSpeechLogic, AudioFile } from './TextToSpeechLogic'
+import { useAuth } from './contexts/AuthContext'
 
 // Component imports
-import Header from './components/Header'
+import UserHeader from './components/UserHeader'
 import HowItWorksSection from './components/HowItWorksSection'
 import ErrorBanner from './components/ErrorBanner'
 import TextInputSection from './components/TextInputSection'
@@ -14,6 +15,8 @@ import HistoryTabContent from './components/HistoryTabContent'
 import FooterAudioPlayer from './components/FooterAudioPlayer'
 
 export default function TextToSpeechUI() {
+  const { user, usage, refreshUserData } = useAuth()
+  
   const {
     text,
     setText,
@@ -85,18 +88,51 @@ export default function TextToSpeechUI() {
     }
   }, [audioFiles, currentlyPlaying, handlePlay])
 
+  // Refresh usage data after successful TTS generation
+  useEffect(() => {
+    if (audioFiles.length > 0) {
+      const latestAudio = audioFiles[audioFiles.length - 1]
+      const now = new Date()
+      const audioTime = new Date(latestAudio.timestamp)
+      const timeDiff = now.getTime() - audioTime.getTime()
+      
+      // If this is a new audio file, refresh usage data
+      if (timeDiff < 2000) {
+        refreshUserData()
+      }
+    }
+  }, [audioFiles, refreshUserData])
+
   // Get the audio file to display in player (current or last played)
   const playerAudioFile = currentAudioFile || lastPlayedAudio
+
+  // Check if user is approaching limit
+  const isNearLimit = usage ? (usage.current / usage.limit) > 0.8 : false
+  const canGenerate = usage ? (usage.current + textStats.charCount) <= usage.limit : true
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
       
-      {/* Header */}
-      <Header />
+      {/* User Header */}
+      <UserHeader />
 
       {/* How It Works Section */}
       {showHowItWorks && (
         <HowItWorksSection onClose={() => setShowHowItWorks(false)} />
+      )}
+
+      {/* Usage Warning Banner */}
+      {isNearLimit && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                ⚠️ You're approaching your monthly limit ({usage?.current.toLocaleString()} / {usage?.limit.toLocaleString()} characters used).
+                {user?.subscriptionStatus === 'free' && ' Consider upgrading your plan.'}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Global Error Banner */}
@@ -106,7 +142,7 @@ export default function TextToSpeechUI() {
 
       {/* Main Content - Full Width Layout */}
       <div className="px-6 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
+        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
           
           {/* Left Column - Text Input (60% width) */}
           <div className="flex-[0_0_60%] flex flex-col">
@@ -127,6 +163,7 @@ export default function TextToSpeechUI() {
 
           {/* Right Column - Tabbed Panel (40% width) */}
           <div className="flex-[0_0_40%] flex flex-col">
+            
             {/* Tab Navigation */}
             <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-gray-200 dark:border-gray-700 border-b-0">
               <div className="flex">
