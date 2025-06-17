@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(data.message || 'Login failed')
         return false
       }
-    } catch (_err) {
+    } catch {
       setError('Network error. Please try again.')
       return false
     } finally {
@@ -166,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(data.message || 'Registration failed')
         return false
       }
-    } catch (_err) {
+    } catch {
       setError('Network error. Please try again.')
       return false
     } finally {
