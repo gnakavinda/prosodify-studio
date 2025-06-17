@@ -88,7 +88,7 @@ export class TTSService {
 
       // Fallback to your existing voice data if backend doesn't have this endpoint
       throw new Error('Voices endpoint not available')
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to fetch voices from backend, using fallback')
       // Return your existing voice data as fallback
       return null
