@@ -108,7 +108,6 @@ export default function TextToSpeechUI() {
 
   // Check if user is approaching limit
   const isNearLimit = usage ? (usage.current / usage.limit) > 0.8 : false
-  const canGenerate = usage ? (usage.current + textStats.charCount) <= usage.limit : true
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
@@ -127,7 +126,7 @@ export default function TextToSpeechUI() {
           <div className="flex">
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                ⚠️ You're approaching your monthly limit ({usage?.current.toLocaleString()} / {usage?.limit.toLocaleString()} characters used).
+                ⚠️ You&apos;re approaching your monthly limit ({usage?.current.toLocaleString()} / {usage?.limit.toLocaleString()} characters used).
                 {user?.subscriptionStatus === 'free' && ' Consider upgrading your plan.'}
               </p>
             </div>

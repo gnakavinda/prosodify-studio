@@ -41,7 +41,7 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
               Authentication Required
             </h1>
             <p className="text-gray-600 mb-8 max-w-md">
-              Please sign in to access Prosodify's text-to-speech features and track your usage.
+              Please sign in to access Prosodify&apos;s text-to-speech features and track your usage.
             </p>
             <button
               onClick={() => setShowAuthModal(true)}

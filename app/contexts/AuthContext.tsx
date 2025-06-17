@@ -60,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setIsLoading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const verifyToken = async (authToken: string) => {
@@ -132,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(data.message || 'Login failed')
         return false
       }
-    } catch (error) {
+    } catch (err) {
       setError('Network error. Please try again.')
       return false
     } finally {
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(data.message || 'Registration failed')
         return false
       }
-    } catch (error) {
+    } catch (err) {
       setError('Network error. Please try again.')
       return false
     } finally {

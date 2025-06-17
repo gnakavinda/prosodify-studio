@@ -62,8 +62,8 @@ export class TTSService {
       }
 
       return data
-    } catch (error) {
-      console.error('TTS Service Error:', error)
+    } catch (err) {
+      console.error('TTS Service Error:', err)
       return {
         success: false,
         error: 'Network error. Please check your connection.',
@@ -88,7 +88,7 @@ export class TTSService {
 
       // Fallback to your existing voice data if backend doesn't have this endpoint
       throw new Error('Voices endpoint not available')
-    } catch (error) {
+    } catch (err) {
       console.error('Failed to fetch voices from backend, using fallback')
       // Return your existing voice data as fallback
       return null
