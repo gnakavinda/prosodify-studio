@@ -1,41 +1,72 @@
 // components/auth/LoginPage.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../contexts/AuthContext'
-import { Eye, EyeOff, ArrowRight, Volume2 } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Volume2, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, error, clearError, user, isLoading } = useAuth()
   const router = useRouter()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [localLoading, setLocalLoading] = useState(false)
+  const [localError, setLocalError] = useState('')
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('✅ User already logged in, redirecting...')
+      router.replace('/')
+    }
+  }, [user, router])
+
+  // Clear errors when component mounts or form data changes
+  useEffect(() => {
+    clearError()
+    setLocalError('')
+  }, [clearError, formData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setLocalError('')
+    clearError()
 
+    // Validation
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields')
+      setLocalError('Please fill in all fields')
       return
     }
 
-    setIsLoading(true)
+    if (!formData.email.includes('@')) {
+      setLocalError('Please enter a valid email address')
+      return
+    }
+
+    setLocalLoading(true)
 
     try {
-      await login(formData.email, formData.password)
-      // Redirect to main app after successful login
-      router.push('/')
+      const success = await login(formData.email, formData.password)
+      
+      if (success) {
+        console.log('✅ Login successful, redirecting...')
+        // Small delay to show success state before redirect
+        setTimeout(() => {
+          router.replace('/')
+        }, 100)
+      } else {
+        // Error is handled by AuthContext
+        console.log('❌ Login failed')
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      console.error('❌ Unexpected login error:', err)
+      setLocalError('An unexpected error occurred. Please try again.')
     } finally {
-      setIsLoading(false)
+      setLocalLoading(false)
     }
   }
 
@@ -44,6 +75,27 @@ export default function LoginPage() {
       ...prev,
       [e.target.name]: e.target.value
     }))
+    // Clear errors when user starts typing
+    if (localError) setLocalError('')
+    if (error) clearError()
+  }
+
+  // Show the current error (either local validation or auth context error)
+  const currentError = localError || error
+
+  // Loading state - either from auth context or local state
+  const isCurrentlyLoading = isLoading || localLoading
+
+  // Don't render the form if user is already logged in
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -66,9 +118,17 @@ export default function LoginPage() {
         {/* Login Form */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+            {currentError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-800 dark:text-red-200 text-sm font-medium">
+                    Login Failed
+                  </p>
+                  <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+                    {currentError}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -81,7 +141,8 @@ export default function LoginPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                disabled={isCurrentlyLoading}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Enter your email"
                 required
               />
@@ -97,14 +158,16 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  disabled={isCurrentlyLoading}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  disabled={isCurrentlyLoading}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -115,7 +178,8 @@ export default function LoginPage() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  disabled={isCurrentlyLoading}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Remember me
@@ -131,11 +195,14 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              disabled={isCurrentlyLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 min-h-[48px]"
             >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {isCurrentlyLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
               ) : (
                 <>
                   <span>Sign In</span>
