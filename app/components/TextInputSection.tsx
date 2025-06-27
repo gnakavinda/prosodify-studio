@@ -54,7 +54,7 @@ const TextInputSection = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300 flex flex-col h-full">
+    <div className="bg-secondary border border-primary p-4 transition-colors duration-300 flex flex-col h-full rounded-lg">
       
       {/* Dynamic Parameter Information Area */}
       <div 
@@ -69,7 +69,7 @@ const TextInputSection = ({
             {/* Left: Title with icon */}
             <div className="flex items-center space-x-2 flex-shrink-0">
               <Volume2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+              <span className="text-xs font-medium text-primary">
                 Current Settings
               </span>
             </div>
@@ -78,40 +78,40 @@ const TextInputSection = ({
             <div className="flex items-center space-x-4 text-xs flex-1 min-w-0 mx-4">
               {/* Voice */}
               <div className="flex items-center space-x-1 min-w-0">
-                <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">Voice:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                <span className="text-muted flex-shrink-0">Voice:</span>
+                <span className="font-medium text-primary truncate">
                   {getVoiceDisplayName(selectedVoice)}
                 </span>
               </div>
               
               {/* Style */}
               <div className="flex items-center space-x-1 flex-shrink-0">
-                <span className="text-gray-500 dark:text-gray-400">Style:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                <span className="text-muted">Style:</span>
+                <span className="font-medium text-primary capitalize">
                   {voiceStyle.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
               </div>
               
               {/* Speed */}
               <div className="flex items-center space-x-1 flex-shrink-0">
-                <span className="text-gray-500 dark:text-gray-400">Speed:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
+                <span className="text-muted">Speed:</span>
+                <span className="font-medium text-primary">
                   {speechRate}x
                 </span>
               </div>
               
               {/* Pitch */}
               <div className="flex items-center space-x-1 flex-shrink-0">
-                <span className="text-gray-500 dark:text-gray-400">Pitch:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
+                <span className="text-muted">Pitch:</span>
+                <span className="font-medium text-primary">
                   {pitch}x
                 </span>
               </div>
               
               {/* Volume */}
               <div className="flex items-center space-x-1 flex-shrink-0">
-                <span className="text-gray-500 dark:text-gray-400">Volume:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
+                <span className="text-muted">Volume:</span>
+                <span className="font-medium text-primary">
                   {volume}x
                 </span>
               </div>
@@ -133,7 +133,7 @@ const TextInputSection = ({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Start typing here or paste any text you want to turn into lifelike speech..."
-          className="w-full flex-1 p-3 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+          className="w-full flex-1 p-3 pr-10 text-sm border border-secondary rounded-md resize-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all bg-primary text-primary placeholder-text-muted"
           maxLength={5000}
           style={{ minHeight: '300px' }}
         />
@@ -141,7 +141,7 @@ const TextInputSection = ({
         {/* Reset button - top right corner */}
         <button
           onClick={resetForm}
-          className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
+          className="absolute top-3 right-3 p-1 text-muted hover-text transition-colors rounded-md hover-bg"
           title="Reset form"
         >
           <X className="w-4 h-4" />
@@ -149,7 +149,7 @@ const TextInputSection = ({
         
         {/* Bottom controls */}
         <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-muted">
             <span>{textStats.charCount} / 5,000 characters</span>
             <span className="mx-2">•</span>
             <span>${textStats.cost}</span>
@@ -196,7 +196,7 @@ const ActionButton = ({
   const baseClasses = "flex items-center px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
   const variantClasses = variant === 'primary' 
     ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100"
-    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+    : "bg-tertiary text-secondary hover:bg-accent"
   
   return (
     <button
