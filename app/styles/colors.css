@@ -1,0 +1,107 @@
+/* Prosodify Studio Color System */
+
+:root {
+  /* Light Mode - Soft and Warm */
+  --bg-primary: #fffffe;
+  --bg-secondary: #faf9f7; /* warm-50 */
+  --bg-tertiary: #f5f5f4; /* warm-100 */
+  --bg-accent: #e7e5e4; /* warm-200 */
+
+  --border-primary: #e7e5e4; /* warm-200 */
+  --border-secondary: #d6d3d1; /* warm-300 */
+
+  --text-primary: #1c1917; /* warm-900 */
+  --text-secondary: #44403c; /* warm-700 */
+  --text-tertiary: #78716c; /* warm-500 */
+  --text-muted: #a8a29e; /* warm-400 */
+
+  --hover-bg: #f5f5f4; /* warm-100 */
+  --hover-border: #d6d3d1; /* warm-300 */
+  --hover-text: #1c1917; /* warm-900 */
+
+    /* Sidebar Active State - Light Mode */
+  --sidebar-active-bg: #dbeafe; /* blue-100 */
+  --sidebar-active-text: #2563eb; /* blue-600 */
+  --sidebar-active-border: #2563eb; /* blue-600 */
+}
+
+.dark {
+  /* Dark Mode - Deep Purple */
+  --bg-primary: #0f0f23; /* custom deep */
+  --bg-secondary: #1a1625; /* custom dark */
+  --bg-tertiary: #2a2438; /* custom medium */
+  --bg-accent: #3f3b4f; /* custom light */
+
+  --border-primary: #2a2438;
+  --border-secondary: #3f3b4f;
+
+  --text-primary: #f8fafc; /* slate-50 */
+  --text-secondary: #e2e8f0; /* slate-200 */
+  --text-tertiary: #94a3b8; /* slate-400 */
+  --text-muted: #64748b; /* slate-500 */
+
+  --hover-bg: #2a2438;
+  --hover-border: #3f3b4f;
+  --hover-text: #f8fafc;
+
+  /* Sidebar Active State - Dark Mode */
+  --sidebar-active-bg: #1e293b; /* slate-800 */
+  --sidebar-active-text: #60a5fa; /* blue-400 */
+  --sidebar-active-border: #60a5fa; /* blue-400 */
+}
+
+/* Utility Classes */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+.bg-accent {
+  background-color: var(--bg-accent);
+}
+
+.border-primary {
+  border-color: var(--border-primary);
+}
+.border-secondary {
+  border-color: var(--border-secondary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+
+.hover-bg:hover {
+  background-color: var(--hover-bg);
+}
+.hover-border:hover {
+  border-color: var(--hover-border);
+}
+.hover-text:hover {
+  color: var(--hover-text);
+}
+
+/* Placeholder text colors */
+.placeholder-text-muted::placeholder {
+  color: var(--text-muted);
+}
+
+/* Sidebar Active State */
+.sidebar-active {
+  background-color: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
+  border-right: 2px solid var(--sidebar-active-border) !important;
+}

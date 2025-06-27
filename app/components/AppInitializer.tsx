@@ -40,13 +40,6 @@ const AppInitializer = ({ children }: AppInitializerProps) => {
           <span>Loading voice library...</span>
         </div>
       )}
-      
-      {/* Optional: Show success notification briefly */}
-      {cacheStatus === 'loaded' && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50 animate-in slide-in-from-bottom-2 duration-300">
-          ✅ Voice library ready
-        </div>
-      )}
     </>
   )
 }
