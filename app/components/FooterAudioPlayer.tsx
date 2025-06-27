@@ -116,7 +116,7 @@ const FooterAudioPlayer = ({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-xl transition-all duration-300 ease-in-out z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-primary border-t border-primary shadow-xl transition-all duration-300 ease-in-out z-50">
       
       {/* Minimized View */}
       {isMinimized ? (
@@ -143,10 +143,10 @@ const FooterAudioPlayer = ({
                 <Volume2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                <h3 className="text-xs font-medium text-primary">
                   {audioFile.name.replace(/^(Preview_|Full_)/, '')}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted">
                   {audioFile.isPreview ? 'Preview' : 'Aria'} • Created {audioFile.timestamp.split(',')[0]}
                 </p>
               </div>
@@ -158,7 +158,7 @@ const FooterAudioPlayer = ({
               <button 
                 onClick={handleSkipBack}
                 disabled={!duration || !onSeek}
-                className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50"
+                className="p-1.5 text-tertiary hover-text transition-colors disabled:opacity-50"
               >
                 <SkipBack className="w-4 h-4" />
               </button>
@@ -184,7 +184,7 @@ const FooterAudioPlayer = ({
               <button 
                 onClick={handleSkipForward}
                 disabled={!duration || !onSeek}
-                className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50"
+                className="p-1.5 text-tertiary hover-text transition-colors disabled:opacity-50"
               >
                 <SkipForward className="w-4 h-4" />
               </button>
@@ -196,7 +196,7 @@ const FooterAudioPlayer = ({
               {!audioFile.isPreview && (
                 <button
                   onClick={onDownload}
-                  className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                  className="p-1.5 text-tertiary hover-text transition-colors"
                   title="Download"
                 >
                   <Download className="w-3 h-3" />
@@ -204,7 +204,7 @@ const FooterAudioPlayer = ({
               )}
               
               <button
-                className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                className="p-1.5 text-tertiary hover-text transition-colors"
                 title="Share"
               >
                 <Share className="w-3 h-3" />
@@ -212,7 +212,7 @@ const FooterAudioPlayer = ({
 
               <button
                 onClick={onToggleMinimize}
-                className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                className="p-1.5 text-tertiary hover-text transition-colors"
                 title="Minimize"
               >
                 <Minimize2 className="w-3 h-3" />
@@ -220,7 +220,7 @@ const FooterAudioPlayer = ({
 
               <button
                 onClick={onClose}
-                className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                className="p-1.5 text-tertiary hover-text transition-colors"
                 title="Close"
               >
                 <X className="w-3 h-3" />
@@ -230,13 +230,13 @@ const FooterAudioPlayer = ({
 
           {/* Bottom Row: Interactive Timeline */}
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono w-10">
+            <span className="text-xs text-muted font-mono w-10">
               {formatTime(isDragging ? dragTime : currentTime)}
             </span>
             
             <div 
               id="audio-timeline"
-              className="flex-1 bg-gray-300 dark:bg-gray-600 rounded-full h-1 cursor-pointer relative"
+              className="flex-1 bg-accent rounded-full h-1 cursor-pointer relative"
               onMouseDown={handleMouseDown}
               onClick={handleTimelineInteraction}
             >
@@ -255,7 +255,7 @@ const FooterAudioPlayer = ({
               </div>
             </div>
             
-            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono w-10">
+            <span className="text-xs text-muted font-mono w-10">
               {formatTime(duration)}
             </span>
           </div>
