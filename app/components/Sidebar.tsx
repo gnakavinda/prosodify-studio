@@ -5,6 +5,7 @@ import { FileText, Upload, FolderOpen, Zap, Star, CreditCard, Grid3X3, User, Vol
 interface SidebarItem {
   id: string
   icon: LucideIcon  // Changed from 'any' to 'LucideIcon'
+
   label: string
   description: string
 }
