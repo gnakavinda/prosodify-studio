@@ -1,10 +1,11 @@
 'use client'
 
-import { FileText, Upload, FolderOpen, Zap, Star, CreditCard, Grid3X3, User, Volume2 } from 'lucide-react'
+import { FileText, Upload, FolderOpen, Zap, Star, CreditCard, Grid3X3, User, Volume2, LucideIcon } from 'lucide-react'
 
 interface SidebarItem {
   id: string
-  icon: any
+  icon: LucideIcon  // Changed from 'any' to 'LucideIcon'
+
   label: string
   description: string
 }
